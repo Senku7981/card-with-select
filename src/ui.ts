@@ -107,8 +107,13 @@ export default class Ui {
    * @param customLink - custom link URL
    * @param file - attached file data
    */
-  public addNewItem(title: string, description: string, entityId: string | null, customLink?: string, file?: { url: string; name: string; size?: number }): void {
+  public addNewItem(title: string, description: string, entityId: string | null, customLink?: string, file?: {
+    url: string;
+    name: string;
+    size?: number;
+  }): void {
     const maxItems = this.config.maxEntityQuantity || 3;
+
     if (this.nodes.entities.querySelectorAll('.card-with-select__item').length >= maxItems) {
       console.warn('Количество элементов превысило число ' + maxItems);
 
@@ -125,14 +130,17 @@ export default class Ui {
       selectClear: make('button', ['card-with-select__item__clear-button'], {
         type: 'button',
         title: 'Очистить выбор',
-        innerHTML: '×'
+        innerHTML: '×',
       }),
       customLink: make('input', [this.CSS.textInput, this.CSS.input, 'card-with-select__item__custom-link'], {
         type: 'url',
         placeholder: 'Введите произвольную ссылку (необязательно)',
       }),
       fileZone: make('div', ['card-with-select__item__file-zone'], {}),
-      fileInput: make('input', [], { type: 'file', style: 'display: none' }),
+      fileInput: make('input', [], {
+        type: 'file',
+        style: 'display: none'
+      }),
       fileInfo: make('div', ['card-with-select__item__file-info'], {}),
       entity: make('div', ['card-with-select__item'], {}),
       remove: make('div', ['card-with-select__item__remove'], {}),
@@ -151,6 +159,7 @@ export default class Ui {
     // Обработчик для произвольной ссылки
     entity.customLink.addEventListener('input', () => {
       const customLinkValue = (entity.customLink as HTMLInputElement).value.trim();
+
       if (customLinkValue) {
         // Если введена произвольная ссылка, блокируем select и файл
         this.disableSelectAndFile(entity);
@@ -162,10 +171,12 @@ export default class Ui {
 
     // Обработчик для файлов - блокируем drag&drop и клик если выбрана ссылка
     const originalFileZoneClick = fileButton?.addEventListener;
+
     fileButton?.addEventListener('click', (e) => {
       if (this.isSelectOrCustomLinkFilled(entity)) {
         e.preventDefault();
         this.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
+
         return;
       }
       entity.fileInput.click();
@@ -174,9 +185,11 @@ export default class Ui {
     // Обработчик выбора файла
     entity.fileInput.addEventListener('change', (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
+
       if (file) {
         if (this.isSelectOrCustomLinkFilled(entity)) {
           this.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
+
           return;
         }
         this.handleFileUpload(file, entity);
@@ -205,14 +218,16 @@ export default class Ui {
 
       if (this.isSelectOrCustomLinkFilled(entity)) {
         this.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
+
         return;
       }
 
       const files = e.dataTransfer?.files;
+
       if (files && files.length > 0) {
         this.handleFileUpload(files[0], entity);
       }
-    }); setTimeout(() => {
+    }); setTimeout(async () => {
       entity.choices = new NativeSelect(entity.select, {
         placeholder: 'Выберите',
         searchEnabled: true,
@@ -224,6 +239,24 @@ export default class Ui {
       // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
       (entity.entity as any)._nativeSelectInstance = entity.choices;
 
+      // ⭐ ЗАГРУЖАЕМ НАЧАЛЬНЫЙ СПИСОК СТАТЕЙ
+      try {
+        const response = await fetch(`${this.config.endpoint}`); // Без параметра q для получения всех статей
+        const data = await response.json();
+
+        if (data.results && Array.isArray(data.results)) {
+          const options = data.results.map((item: any) => ({
+            id: item.id,
+            text: item.text,
+            selected: false,
+          }));
+
+          entity.choices.setOptions(options);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке начального списка статей:', error);
+      }
+
       // Настраиваем поиск
       entity.choices.onSearch(async (query: string) => {
         try {
@@ -234,12 +267,14 @@ export default class Ui {
             return data.results.map((item: any) => ({
               id: item.id,
               text: item.text,
-              selected: false
+              selected: false,
             }));
           }
+
           return [];
         } catch (error) {
           console.error('Ошибка при поиске:', error);
+
           return [];
         }
       });
@@ -270,12 +305,12 @@ export default class Ui {
               entity.choices!.setOptions([{
                 id: data.data.id,
                 text: data.data.text,
-                selected: true
+                selected: true,
               }]);
               entity.choices!.setValue(data.data.id);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error('Ошибка при загрузке элемента:', error);
           });
       }
@@ -311,8 +346,8 @@ export default class Ui {
     newEntity.appendChild(entity.fileInput);
 
     entity.remove.addEventListener('click', function () {
-      entity.remove.closest('.card-with-select__item')?.remove()
-    })
+      entity.remove.closest('.card-with-select__item')?.remove();
+    });
 
     entity.entity.addEventListener('dragover', (e) => {
       e.stopPropagation();
@@ -337,11 +372,14 @@ export default class Ui {
 
   /**
    * Обработка загрузки файла
+   * @param file
+   * @param entity
    */
   private handleFileUpload(file: File, entity: any): void {
     this.showFileUploadProgress(entity, file);
 
     const formData = new FormData();
+
     formData.append('file', file);
 
     const uploadUrl = '/upload/file';
@@ -354,19 +392,21 @@ export default class Ui {
         'X-CSRF-Token': this.getCSRFToken(),
       },
     })
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`Upload failed: ${response.status}`);
         }
+
         return response.json();
       })
-      .then(data => {
+      .then((data) => {
         if (data.success && data.url) {
           const fileData = {
             url: data.url,
             name: file.name,
             size: file.size,
           };
+
           this.displayFileInfo(entity, fileData);
           entity.entity.dataset.fileData = JSON.stringify(fileData);
           this.disableSelectAndCustomLink(entity);
@@ -374,7 +414,7 @@ export default class Ui {
           throw new Error(data.message || 'Upload failed');
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.warn('File upload to server failed, using local blob:', error);
         const fileData = {
           url: URL.createObjectURL(file),
@@ -391,20 +431,30 @@ export default class Ui {
 
   /**
    * Отображение информации о файле
+   * @param entity
+   * @param fileData
    */
-  private displayFileInfo(entity: any, fileData: { url: string; name: string; size?: number; isBlob?: boolean }): void {
+  private displayFileInfo(entity: any, fileData: {
+    url: string;
+    name: string;
+    size?: number;
+    isBlob?: boolean;
+  }): void {
     const sizeText = fileData.size ? ` (${this.formatFileSize(fileData.size)})` : '';
 
     const getFileNameWithoutExtension = (fileName: string): string => {
       const parts = fileName.split('.');
+
       if (parts.length > 1) {
         return parts.slice(0, -1).join('.');
       }
+
       return fileName;
     };
 
     const getFileExtension = (fileName: string): string => {
       const parts = fileName.split('.');
+
       return parts.length > 1 ? parts[parts.length - 1] : '';
     };
 
@@ -498,7 +548,8 @@ export default class Ui {
         
         <!-- Ссылка для скачивания -->
         <div>
-          ${fileData.isBlob ? `
+          ${fileData.isBlob
+        ? `
             <span style="
               color: #999; 
               font-size: 12px;
@@ -509,7 +560,8 @@ export default class Ui {
               <span style="flex-shrink: 0;">⚠️</span>
               <span>Скачивание недоступно (файл не загружен на сервер)</span>
             </span>
-          ` : `
+          `
+        : `
             <a href="${fileData.url}" download="${fileData.name}" style="
               color: #6788F3; 
               font-size: 12px;
@@ -532,6 +584,7 @@ export default class Ui {
     `;
 
     const changeButton = entity.fileInfo.querySelector('.card-with-select__item__change-file');
+
     if (changeButton) {
       changeButton.addEventListener('click', () => {
         entity.fileZone.style.display = 'flex';
@@ -552,17 +605,19 @@ export default class Ui {
     }
 
     const fileNameInput = entity.fileInfo.querySelector('.card-with-select__item__file-name-input');
+
     if (fileNameInput) {
       fileNameInput.addEventListener('input', (e: Event) => {
         const inputElement = e.target as HTMLInputElement;
         const newNameWithoutExtension = inputElement.value;
         const originalExtension = inputElement.dataset.originalExtension || '';
 
-        const fullFileName = originalExtension ?
-          `${newNameWithoutExtension}.${originalExtension}` :
-          newNameWithoutExtension;
+        const fullFileName = originalExtension
+          ? `${newNameWithoutExtension}.${originalExtension}`
+          : newNameWithoutExtension;
 
         const currentFileData = JSON.parse(entity.entity.dataset.fileData || '{}');
+
         currentFileData.displayName = fullFileName;
         entity.entity.dataset.fileData = JSON.stringify(currentFileData);
       });
@@ -606,6 +661,7 @@ export default class Ui {
 
   /**
    * Обновляет состояния блокировки элементов
+   * @param entity
    */
   private updateBlockingStates(entity: any): void {
     const selectedValue = entity.choices?.getValue() || '';
@@ -615,16 +671,13 @@ export default class Ui {
     if (selectedValue && selectedValue !== '') {
       this.disableFileAndCustomLink(entity);
       entity.selectClear.style.display = 'inline-block';
-    }
-    else if (customLinkValue) {
+    } else if (customLinkValue) {
       this.disableSelectAndFile(entity);
       entity.selectClear.style.display = 'none';
-    }
-    else if (hasFile) {
+    } else if (hasFile) {
       this.disableSelectAndCustomLink(entity);
       entity.selectClear.style.display = 'none';
-    }
-    else {
+    } else {
       this.enableAllFields(entity);
       entity.selectClear.style.display = 'none';
     }
@@ -632,6 +685,7 @@ export default class Ui {
 
   /**
    * Разблокирует все поля
+   * @param entity
    */
   private enableAllFields(entity: any): void {
     this.enableFileAndCustomLink(entity);
@@ -640,15 +694,18 @@ export default class Ui {
 
   /**
    * Проверяет, заполнен ли select или поле произвольной ссылки
+   * @param entity
    */
   private isSelectOrCustomLinkFilled(entity: any): boolean {
     const selectedValue = entity.choices?.getValue() || '';
     const customLinkValue = (entity.customLink as HTMLInputElement).value.trim();
+
     return (selectedValue && selectedValue !== '') || customLinkValue !== '';
   }
 
   /**
    * Проверяет, прикреплен ли файл
+   * @param entity
    */
   private isFileFilled(entity: any): boolean {
     return !!entity.entity.dataset.fileData;
@@ -656,6 +713,7 @@ export default class Ui {
 
   /**
    * Блокирует файл и произвольную ссылку
+   * @param entity
    */
   private disableFileAndCustomLink(entity: any): void {
     entity.customLink.disabled = true;
@@ -670,6 +728,7 @@ export default class Ui {
 
   /**
    * Разблокирует файл и произвольную ссылку
+   * @param entity
    */
   private enableFileAndCustomLink(entity: any): void {
     entity.customLink.disabled = false;
@@ -684,6 +743,7 @@ export default class Ui {
 
   /**
    * Блокирует select и произвольную ссылку
+   * @param entity
    */
   private disableSelectAndCustomLink(entity: any): void {
     if (entity.choices) {
@@ -700,6 +760,7 @@ export default class Ui {
 
   /**
    * Разблокирует select и произвольную ссылку
+   * @param entity
    */
   private enableSelectAndCustomLink(entity: any): void {
     if (entity.choices) {
@@ -716,6 +777,7 @@ export default class Ui {
 
   /**
    * Блокирует select и файл
+   * @param entity
    */
   private disableSelectAndFile(entity: any): void {
     if (entity.choices) {
@@ -731,6 +793,7 @@ export default class Ui {
 
   /**
    * Разблокирует select и файл
+   * @param entity
    */
   private enableSelectAndFile(entity: any): void {
     if (entity.choices) {
@@ -746,9 +809,11 @@ export default class Ui {
 
   /**
    * Показывает сообщение о блокировке
+   * @param message
    */
   private showBlockingMessage(message: string): void {
     const notification = document.createElement('div');
+
     notification.className = 'card-with-select-notification';
     notification.textContent = message;
 
@@ -763,14 +828,18 @@ export default class Ui {
 
   /**
    * Получает расширение файла
+   * @param fileName
    */
   private getFileExtension(fileName: string): string {
     const parts = fileName.split('.');
+
     return parts.length > 1 ? parts[parts.length - 1] : '';
   }
 
   /**
    * Показывает прогресс загрузки файла
+   * @param entity
+   * @param file
    */
   private showFileUploadProgress(entity: any, file: File): void {
     const fileIcon = this.getFileIcon(file.name);
@@ -813,33 +882,36 @@ export default class Ui {
 
   /**
    * Получает иконку файла по его имени
+   * @param fileName
    */
   private getFileIcon(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+    const extension = fileName.split('.').pop()
+      ?.toLowerCase();
     const iconMap: Record<string, string> = {
-      'pdf': '📄',
-      'doc': '📝',
-      'docx': '📝',
-      'xls': '📊',
-      'xlsx': '📊',
-      'ppt': '📊',
-      'pptx': '📊',
-      'txt': '📄',
-      'rtf': '📄',
-      'zip': '📦',
-      'rar': '📦',
+      pdf: '📄',
+      doc: '📝',
+      docx: '📝',
+      xls: '📊',
+      xlsx: '📊',
+      ppt: '📊',
+      pptx: '📊',
+      txt: '📄',
+      rtf: '📄',
+      zip: '📦',
+      rar: '📦',
       '7z': '📦',
-      'jpg': '🖼️',
-      'jpeg': '🖼️',
-      'png': '🖼️',
-      'gif': '🖼️',
-      'svg': '🖼️',
-      'mp3': '🎵',
-      'wav': '🎵',
-      'mp4': '🎬',
-      'avi': '🎬',
-      'mov': '🎬',
+      jpg: '🖼️',
+      jpeg: '🖼️',
+      png: '🖼️',
+      gif: '🖼️',
+      svg: '🖼️',
+      mp3: '🎵',
+      wav: '🎵',
+      mp4: '🎬',
+      avi: '🎬',
+      mov: '🎬',
     };
+
     return iconMap[extension || ''] || '📎';
   }
 
@@ -848,6 +920,7 @@ export default class Ui {
    */
   private getCSRFToken(): string {
     const csrfMeta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+
     if (csrfMeta) {
       return csrfMeta.content;
     }
@@ -861,9 +934,12 @@ export default class Ui {
 
   /**
    * Форматирует размер файла
+   * @param bytes
    */
   private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
 
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
