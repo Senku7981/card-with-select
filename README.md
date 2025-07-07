@@ -54,7 +54,7 @@ const editor = new EditorJS({
     },
   },
 });
-````
+```
 
 ### Использование через CDN
 
@@ -283,3 +283,4 @@ MIT
 ## Основа
 
 За основу был взят пакет https://github.com/editor-js/image
+````
