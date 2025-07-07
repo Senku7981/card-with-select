@@ -29,11 +29,11 @@ npm install card-with-select-tool
 
 или
 
-````bash
+```bash
 yarn add card-with-select-tool
+```
 
 ## Использование
-
 
 ```javascript
 import EditorJS from '@editorjs/editorjs';
@@ -283,4 +283,7 @@ MIT
 ## Основа
 
 За основу был взят пакет https://github.com/editor-js/image
-````
+
+```
+
+```
