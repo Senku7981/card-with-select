@@ -14,7 +14,7 @@ import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, Bloc
 import './index.css';
 
 import Ui from './ui';
-import { NativeSelect } from './utils/native-select';
+import type { NativeSelect } from './utils/native-select';
 
 import { IconText } from '@codexteam/icons';
 import type { CardWithSelectToolData, CardWithSelectConfig, EntityType } from './types/types';
@@ -147,25 +147,35 @@ export default class CardWithSelectTool implements BlockTool {
       const selectElement = entity.querySelector('select');
       const customLinkInput = entity.querySelector('.card-with-select__item__custom-link') as HTMLInputElement;
       const fileDataStr = (entity as HTMLElement).dataset.fileData;
+      const linkType = (entity as HTMLElement).dataset.linkType as 'article' | 'custom' | 'file';
 
-      let fileData = null;
-      if (fileDataStr !== null && fileDataStr !== undefined) {
+      let fileData: {
+        url: string;
+        name: string;
+        size?: number;
+      } | null = null;
+
+      if (fileDataStr) {
         try {
-          fileData = JSON.parse(fileDataStr);
+          fileData = JSON.parse(fileDataStr) as {
+            url: string;
+            name: string;
+            size?: number;
+          };
         } catch (e) {
           console.warn('Ошибка парсинга данных файла:', e);
         }
       }
 
-      if (titleElement && descriptionElement && selectElement) {
+      if (titleElement && descriptionElement) {
         // Получаем значение из NativeSelect, если он инициализирован
         const entityElement = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
         const nativeSelectInstance = entityElement._nativeSelectInstance;
         let entityId = '';
 
-        if (nativeSelectInstance !== null && nativeSelectInstance !== undefined) {
+        if (nativeSelectInstance) {
           entityId = nativeSelectInstance.getValue() || '';
-        } else {
+        } else if (selectElement) {
           entityId = selectElement.value || '';
         }
 
@@ -175,6 +185,7 @@ export default class CardWithSelectTool implements BlockTool {
           entityId: entityId,
           customLink: customLinkInput?.value || undefined,
           file: fileData || undefined,
+          linkType: linkType || 'article',
         });
       }
     });
@@ -187,17 +198,33 @@ export default class CardWithSelectTool implements BlockTool {
    * @returns MenuConfig
    */
   public renderSettings(): MenuConfig {
-    return {
-      icon: IconPlus,
-      label: this.api.i18n.t(`Добавить блок`),
-      onActivate: () => this.addNewEmptyItem(),
-      closeOnActivate: false,
-      isActive: false,
-    };
+    return [
+      {
+        icon: IconPlus,
+        label: this.api.i18n.t('Добавить ссылку на статью'),
+        onActivate: () => this.addNewItemWithType('article'),
+        closeOnActivate: true,
+        isActive: false,
+      },
+      {
+        icon: IconPlus,
+        label: this.api.i18n.t('Добавить произвольную ссылку'),
+        onActivate: () => this.addNewItemWithType('custom'),
+        closeOnActivate: true,
+        isActive: false,
+      },
+      {
+        icon: IconPlus,
+        label: this.api.i18n.t('Добавить файл'),
+        onActivate: () => this.addNewItemWithType('file'),
+        closeOnActivate: true,
+        isActive: false,
+      },
+    ];
   }
 
-  protected addNewEmptyItem(): void {
-    this.ui.addNewItem('', '', null);
+  protected addNewItemWithType(type: 'article' | 'custom' | 'file'): void {
+    this.ui.addNewItemWithType('', '', null, type);
   }
 
   /**
@@ -241,19 +268,21 @@ export default class CardWithSelectTool implements BlockTool {
           description: item.description || '',
           entityId: item.entityId || '',
           customLink: item.customLink || undefined,
-          file: item.file || undefined
+          file: item.file || undefined,
+          linkType: item.linkType || 'article',
         };
 
-        this.ui.addNewItem(
+        this.ui.addNewItemWithType(
           safeItem.title,
           safeItem.description,
           String(safeItem.entityId),
+          safeItem.linkType,
           safeItem.customLink,
           safeItem.file
         );
       });
     } else {
-      this.ui.addNewItem('', '', null);
+      this.ui.addNewItemWithType('', '', null, 'article');
     }
   }
 

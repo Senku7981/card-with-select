@@ -112,7 +112,23 @@ export default class Ui {
     name: string;
     size?: number;
   }): void {
-    const maxItems = this.config.maxEntityQuantity || 3;
+    this.addNewItemWithType(title, description, entityId, 'article', customLink, file);
+  }
+
+  /**
+   * @param title - description content text
+   * @param description - description content text
+   * @param entityId - description content text
+   * @param type - type of link: 'article', 'custom', or 'file'
+   * @param customLink - custom link URL
+   * @param file - attached file data
+   */
+  public addNewItemWithType(title: string, description: string, entityId: string | null, type: 'article' | 'custom' | 'file', customLink?: string, file?: {
+    url: string;
+    name: string;
+    size?: number;
+  }): void {
+    const maxItems = this.config.maxEntityQuantity ?? 3;
 
     if (this.nodes.entities.querySelectorAll('.card-with-select__item').length >= maxItems) {
       console.warn('Количество элементов превысило число ' + maxItems);
@@ -134,19 +150,23 @@ export default class Ui {
       }),
       customLink: make('input', [this.CSS.textInput, this.CSS.input, 'card-with-select__item__custom-link'], {
         type: 'url',
-        placeholder: 'Введите произвольную ссылку (необязательно)',
+        placeholder: 'Введите произвольную ссылку',
       }),
       fileZone: make('div', ['card-with-select__item__file-zone'], {}),
       fileInput: make('input', [], {
         type: 'file',
-        style: 'display: none'
+        style: 'display: none',
       }),
       fileInfo: make('div', ['card-with-select__item__file-info'], {}),
       entity: make('div', ['card-with-select__item'], {}),
       remove: make('div', ['card-with-select__item__remove'], {}),
-      choices: null as NativeSelect | null, // Добавляем хранение экземпляра NativeSelect
+      choices: null as NativeSelect | null,
+      linkType: type,
     };
     const newEntity = this.nodes.entities.appendChild(entity.entity);
+
+    // Сохраняем тип ссылки в data-атрибуте
+    entity.entity.dataset.linkType = type;
 
     // Настройка зоны загрузки файлов
     entity.fileZone.innerHTML = `
@@ -170,8 +190,6 @@ export default class Ui {
     });
 
     // Обработчик для файлов - блокируем drag&drop и клик если выбрана ссылка
-    const originalFileZoneClick = fileButton?.addEventListener;
-
     fileButton?.addEventListener('click', (e) => {
       if (this.isSelectOrCustomLinkFilled(entity)) {
         e.preventDefault();
@@ -184,15 +202,15 @@ export default class Ui {
 
     // Обработчик выбора файла
     entity.fileInput.addEventListener('change', (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+      const fileFromInput = (e.target as HTMLInputElement).files?.[0];
 
-      if (file) {
+      if (fileFromInput) {
         if (this.isSelectOrCustomLinkFilled(entity)) {
           this.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
 
           return;
         }
-        this.handleFileUpload(file, entity);
+        this.handleFileUpload(fileFromInput, entity);
       }
     });
 
@@ -227,94 +245,105 @@ export default class Ui {
       if (files && files.length > 0) {
         this.handleFileUpload(files[0], entity);
       }
-    }); setTimeout(async () => {
-      entity.choices = new NativeSelect(entity.select, {
-        placeholder: 'Выберите',
-        searchEnabled: true,
-        loadingText: 'Загрузка...',
-        noResultsText: 'Ничего не найдено',
-        searchPlaceholder: 'Поиск...',
-      });
+    });
 
-      // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
-      (entity.entity as any)._nativeSelectInstance = entity.choices;
+    // Инициализация select только для типа 'article'
+    if (type === 'article') {
+      setTimeout(async () => {
+        entity.choices = new NativeSelect(entity.select, {
+          placeholder: 'Выберите',
+          searchEnabled: true,
+          loadingText: 'Загрузка...',
+          noResultsText: 'Ничего не найдено',
+          searchPlaceholder: 'Поиск...',
+        });
 
-      // ⭐ ЗАГРУЖАЕМ НАЧАЛЬНЫЙ СПИСОК СТАТЕЙ
-      try {
-        const response = await fetch(`${this.config.endpoint}`); // Без параметра q для получения всех статей
-        const data = await response.json();
+        // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
+        (entity.entity as HTMLElement & { _nativeSelectInstance?: NativeSelect })._nativeSelectInstance = entity.choices;
 
-        if (data.results && Array.isArray(data.results)) {
-          const options = data.results.map((item: any) => ({
-            id: item.id,
-            text: item.text,
-            selected: false,
-          }));
-
-          entity.choices.setOptions(options);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке начального списка статей:', error);
-      }
-
-      // Настраиваем поиск
-      entity.choices.onSearch(async (query: string) => {
+        // ⭐ ЗАГРУЖАЕМ НАЧАЛЬНЫЙ СПИСОК СТАТЕЙ
         try {
-          const response = await fetch(`${this.config.endpoint}?q=${encodeURIComponent(query)}`);
-          const data = await response.json();
+          const response = await fetch(`${this.config.endpoint}`);
+          const data = await response.json() as {
+            results?: {
+              id: string;
+              text: string;
+            }[];
+          };
 
           if (data.results && Array.isArray(data.results)) {
-            return data.results.map((item: any) => ({
+            const options = data.results.map(item => ({
               id: item.id,
               text: item.text,
               selected: false,
             }));
+
+            entity.choices.setOptions(options);
           }
-
-          return [];
         } catch (error) {
-          console.error('Ошибка при поиске:', error);
-
-          return [];
+          console.error('Ошибка при загрузке начального списка статей:', error);
         }
-      });
 
-      // Обработчик изменения выбора
-      entity.choices.onChange((value: string) => {
-        if (value && value !== '') {
-          this.disableFileAndCustomLink(entity);
-          entity.selectClear.style.display = 'inline-block';
-        } else {
+        // Настраиваем поиск
+        entity.choices.onSearch(async (query: string) => {
+          try {
+            const response = await fetch(`${this.config.endpoint}?q=${encodeURIComponent(query)}`);
+            const data = await response.json() as {
+              results?: {
+                id: string;
+                text: string;
+              }[];
+            };
+
+            if (data.results && Array.isArray(data.results)) {
+              return data.results.map(item => ({
+                id: item.id,
+                text: item.text,
+                selected: false,
+              }));
+            }
+
+            return [];
+          } catch (error) {
+            console.error('Ошибка при поиске:', error);
+
+            return [];
+          }
+        });
+
+        // Обработчик изменения выбора
+        entity.choices.onChange((value: string) => {
+          if (value && value !== '') {
+            this.disableFileAndCustomLink(entity);
+            entity.selectClear.style.display = 'inline-block';
+          } else {
+            this.enableFileAndCustomLink(entity);
+            entity.selectClear.style.display = 'none';
+          }
+        });
+
+        entity.selectClear.addEventListener('click', (e) => {
+          e.preventDefault();
+          entity.choices!.clear();
           this.enableFileAndCustomLink(entity);
           entity.selectClear.style.display = 'none';
+        });
+
+        if (entityId !== null) {
+          const response = await fetch(`${this.config.endpointOne}?id=${entityId}`);
+          const data = await response.json() as EntityResponse;
+
+          if (data.success) {
+            entity.choices.setOptions([{
+              id: data.data.id,
+              text: data.data.text,
+              selected: true,
+            }]);
+            entity.choices.setValue(data.data.id);
+          }
         }
-      });
-
-      entity.selectClear.addEventListener('click', (e) => {
-        e.preventDefault();
-        entity.choices!.clear();
-        this.enableFileAndCustomLink(entity);
-        entity.selectClear.style.display = 'none';
-      });
-
-      if (entityId !== null) {
-        fetch(`${this.config.endpointOne}?id=${entityId}`)
-          .then(response => response.json())
-          .then((data: EntityResponse) => {
-            if (data.success) {
-              entity.choices!.setOptions([{
-                id: data.data.id,
-                text: data.data.text,
-                selected: true,
-              }]);
-              entity.choices!.setValue(data.data.id);
-            }
-          })
-          .catch((error) => {
-            console.error('Ошибка при загрузке элемента:', error);
-          });
-      }
-    }, 0);
+      }, 0);
+    }
 
     entity.title.dataset.placeholder = this.config.titlePlaceholder;
     entity.title.innerText = title;
@@ -338,12 +367,18 @@ export default class Ui {
     newEntity.appendChild(entity.title);
     newEntity.appendChild(entity.remove);
     newEntity.appendChild(entity.description);
-    newEntity.appendChild(entity.select);
-    newEntity.appendChild(entity.selectClear);
-    newEntity.appendChild(entity.customLink);
-    newEntity.appendChild(entity.fileZone);
-    newEntity.appendChild(entity.fileInfo);
-    newEntity.appendChild(entity.fileInput);
+
+    // Добавляем элементы в зависимости от типа ссылки
+    if (type === 'article') {
+      newEntity.appendChild(entity.select);
+      newEntity.appendChild(entity.selectClear);
+    } else if (type === 'custom') {
+      newEntity.appendChild(entity.customLink);
+    } else if (type === 'file') {
+      newEntity.appendChild(entity.fileZone);
+      newEntity.appendChild(entity.fileInfo);
+      newEntity.appendChild(entity.fileInput);
+    }
 
     entity.remove.addEventListener('click', function () {
       entity.remove.closest('.card-with-select__item')?.remove();
@@ -462,33 +497,33 @@ export default class Ui {
 
     entity.fileInfo.innerHTML = `
       <div style="
-        padding: 8px;
+        padding: 12px;
         background: rgba(103, 136, 243, 0.05);
         border-radius: 6px;
         border: 1px solid rgba(103, 136, 243, 0.1);
-        width: 236px;
-        max-width: 236px;
+        width: 240px;
+        max-width: 240px;
         box-sizing: border-box;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
       ">
         <!-- Основная информация о файле -->
         <div style="
           display: flex; 
           align-items: center; 
-          gap: 8px; 
-          margin-bottom: 8px;
+          gap: 12px; 
+          margin-bottom: 12px;
         ">
-          <span style="font-size: 16px; flex-shrink: 0;">${fileIcon}</span>
+          <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
           <div style="
             flex: 1; 
             min-width: 0;
-            max-width: calc(100% - 110px);
+            max-width: calc(100% - 120px);
             overflow: hidden;
           ">
             <div style="
               color: #6788F3; 
               font-weight: 500; 
-              font-size: 12px;
+              font-size: 14px;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
@@ -497,7 +532,7 @@ export default class Ui {
             <div style="
               color: #6788F3; 
               opacity: 0.7; 
-              font-size: 11px;
+              font-size: 12px;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
@@ -508,9 +543,9 @@ export default class Ui {
             background: transparent;
             border: 1px solid #6788F3;
             color: #6788F3;
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 12px;
             cursor: pointer;
             font-family: 'TT Hoves', sans-serif;
             white-space: nowrap;
@@ -518,12 +553,12 @@ export default class Ui {
         </div>
         
         <!-- Поле для редактирования названия файла -->
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 12px;">
           <label style="
             display: block;
             color: #6788F3;
-            font-size: 11px;
-            margin-bottom: 4px;
+            font-size: 12px;
+            margin-bottom: 6px;
             font-weight: 500;
           ">название файла:</label>
           <input 
@@ -532,10 +567,10 @@ export default class Ui {
             value="${getFileNameWithoutExtension(fileData.name)}"
             style="
               width: 100%;
-              padding: 6px 8px;
+              padding: 8px 12px;
               border: 1px solid rgba(103, 136, 243, 0.3);
               border-radius: 4px;
-              font-size: 12px;
+              font-size: 13px;
               color: #6788F3;
               background: white;
               box-sizing: border-box;
@@ -846,31 +881,31 @@ export default class Ui {
 
     entity.fileInfo.innerHTML = `
       <div style="
-        padding: 8px;
+        padding: 12px;
         background: rgba(103, 136, 243, 0.05);
         border-radius: 6px;
         border: 1px solid rgba(103, 136, 243, 0.1);
-        width: 236px;
-        max-width: 236px;
+        width: 240px;
+        max-width: 240px;
         box-sizing: border-box;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
       ">
         <div style="
           display: flex; 
           align-items: center; 
-          gap: 8px;
+          gap: 12px;
         ">
-          <span style="font-size: 16px; flex-shrink: 0;">${fileIcon}</span>
+          <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
           <div style="flex: 1; min-width: 0;">
             <div style="
               color: #6788F3; 
               font-weight: 500; 
-              font-size: 12px;
+              font-size: 13px;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
             ">${file.name}</div>
-            <div style="color: #6788F3; font-size: 10px;">
+            <div style="color: #6788F3; font-size: 11px;">
               Загружается... ${this.formatFileSize(file.size)}
             </div>
           </div>

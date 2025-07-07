@@ -64,4 +64,5 @@ export interface EntityType {
     name: string;
     size?: number;
   };
+  linkType?: 'article' | 'custom' | 'file';
 }
