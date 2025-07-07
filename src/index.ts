@@ -18,9 +18,6 @@ import Ui from './ui';
 import { IconText } from '@codexteam/icons';
 import type { ActionConfig, CardWithSelectToolData, CardWithSelectConfig, EntityType } from './types/types';
 
-// Глобальные типы для jQuery
-declare const $: any;
-
 type TermToolConstructorOptions = BlockToolConstructorOptions<CardWithSelectToolData, CardWithSelectConfig>;
 
 /**
@@ -151,13 +148,21 @@ export default class CardWithSelectTool implements BlockTool {
         } catch (e) {
           console.warn('Ошибка парсинга данных файла:', e);
         }
-      }
+      } if (titleElement && descriptionElement && selectElement) {
+        // Получаем значение из NativeSelect, если он инициализирован
+        const nativeSelectInstance = (entity as any)._nativeSelectInstance;
+        let entityId = '';
 
-      if (titleElement && descriptionElement && selectElement) {
+        if (nativeSelectInstance) {
+          entityId = nativeSelectInstance.getValue() || '';
+        } else {
+          entityId = selectElement.value || '';
+        }
+
         this._data.items.push({
           title: titleElement.innerHTML,
           description: descriptionElement.innerHTML,
-          entityId: (selectElement as any).value || '',
+          entityId: entityId,
           customLink: customLinkInput?.value || undefined,
           file: fileData || undefined,
         });

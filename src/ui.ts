@@ -2,10 +2,8 @@ import { make } from './utils/dom';
 import type { API } from '@editorjs/editorjs';
 import type { CardWithSelectConfig } from './types/types';
 import { IconTrash } from '@codexteam/icons';
+import { NativeSelect } from './utils/native-select';
 
-// Глобальные типы для jQuery
-declare const $: any;
-declare const jQuery: any;
 /**
  * ConstructorParams interface representing parameters for the Ui class constructor.
  */
@@ -123,7 +121,7 @@ export default class Ui {
       description: make('div', [this.CSS.textInput, this.CSS.descriptionInput, this.CSS.input], {
         contentEditable: !this.readOnly,
       }),
-      select: make('select', [this.CSS.textInput, this.CSS.input], {}),
+      select: make('select', [this.CSS.textInput, this.CSS.input], {}) as HTMLSelectElement,
       selectClear: make('button', ['card-with-select__item__clear-button'], {
         type: 'button',
         title: 'Очистить выбор',
@@ -138,6 +136,7 @@ export default class Ui {
       fileInfo: make('div', ['card-with-select__item__file-info'], {}),
       entity: make('div', ['card-with-select__item'], {}),
       remove: make('div', ['card-with-select__item__remove'], {}),
+      choices: null as NativeSelect | null, // Добавляем хранение экземпляра NativeSelect
     };
     const newEntity = this.nodes.entities.appendChild(entity.entity);
 
@@ -213,26 +212,41 @@ export default class Ui {
       if (files && files.length > 0) {
         this.handleFileUpload(files[0], entity);
       }
-    });
-
-    setTimeout(() => {
-      $(entity.select).select2({
+    }); setTimeout(() => {
+      entity.choices = new NativeSelect(entity.select, {
         placeholder: 'Выберите',
-        ajax: {
-          delay: 250,
-          url: this.config.endpoint,
-          data: function (params: { term: string }) {
-            return {
-              q: params.term,
-            };
-          },
-        },
+        searchEnabled: true,
+        loadingText: 'Загрузка...',
+        noResultsText: 'Ничего не найдено',
+        searchPlaceholder: 'Поиск...',
       });
 
-      // Обработчик изменения select2
-      $(entity.select).on('change', () => {
-        const selectedValue = $(entity.select).val();
-        if (selectedValue && selectedValue !== '') {
+      // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
+      (entity.entity as any)._nativeSelectInstance = entity.choices;
+
+      // Настраиваем поиск
+      entity.choices.onSearch(async (query: string) => {
+        try {
+          const response = await fetch(`${this.config.endpoint}?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+
+          if (data.results && Array.isArray(data.results)) {
+            return data.results.map((item: any) => ({
+              id: item.id,
+              text: item.text,
+              selected: false
+            }));
+          }
+          return [];
+        } catch (error) {
+          console.error('Ошибка при поиске:', error);
+          return [];
+        }
+      });
+
+      // Обработчик изменения выбора
+      entity.choices.onChange((value: string) => {
+        if (value && value !== '') {
           this.disableFileAndCustomLink(entity);
           entity.selectClear.style.display = 'inline-block';
         } else {
@@ -243,24 +257,27 @@ export default class Ui {
 
       entity.selectClear.addEventListener('click', (e) => {
         e.preventDefault();
-        $(entity.select).val(null).trigger('change');
+        entity.choices!.clear();
         this.enableFileAndCustomLink(entity);
         entity.selectClear.style.display = 'none';
       });
 
       if (entityId !== null) {
-        $.ajax({
-          url: this.config.endpointOne,
-          data: { id: entityId },
-          dataType: 'json',
-        }).then((data: EntityResponse) => {
-          if (data.success) {
-            const option = new Option(data.data.text, data.data.id, true, true);
-
-            $(entity.select).append(option)
-              .trigger('change');
-          }
-        });
+        fetch(`${this.config.endpointOne}?id=${entityId}`)
+          .then(response => response.json())
+          .then((data: EntityResponse) => {
+            if (data.success) {
+              entity.choices!.setOptions([{
+                id: data.data.id,
+                text: data.data.text,
+                selected: true
+              }]);
+              entity.choices!.setValue(data.data.id);
+            }
+          })
+          .catch(error => {
+            console.error('Ошибка при загрузке элемента:', error);
+          });
       }
     }, 0);
 
@@ -591,7 +608,7 @@ export default class Ui {
    * Обновляет состояния блокировки элементов
    */
   private updateBlockingStates(entity: any): void {
-    const selectedValue = $(entity.select).val();
+    const selectedValue = entity.choices?.getValue() || '';
     const customLinkValue = (entity.customLink as HTMLInputElement).value.trim();
     const hasFile = this.isFileFilled(entity);
 
@@ -625,7 +642,7 @@ export default class Ui {
    * Проверяет, заполнен ли select или поле произвольной ссылки
    */
   private isSelectOrCustomLinkFilled(entity: any): boolean {
-    const selectedValue = $(entity.select).val();
+    const selectedValue = entity.choices?.getValue() || '';
     const customLinkValue = (entity.customLink as HTMLInputElement).value.trim();
     return (selectedValue && selectedValue !== '') || customLinkValue !== '';
   }
@@ -669,7 +686,9 @@ export default class Ui {
    * Блокирует select и произвольную ссылку
    */
   private disableSelectAndCustomLink(entity: any): void {
-    $(entity.select).prop('disabled', true);
+    if (entity.choices) {
+      entity.choices.disable();
+    }
     entity.select.style.opacity = '0.5';
     entity.select.style.pointerEvents = 'none';
 
@@ -683,7 +702,9 @@ export default class Ui {
    * Разблокирует select и произвольную ссылку
    */
   private enableSelectAndCustomLink(entity: any): void {
-    $(entity.select).prop('disabled', false);
+    if (entity.choices) {
+      entity.choices.enable();
+    }
     entity.select.style.opacity = '1';
     entity.select.style.pointerEvents = 'auto';
 
@@ -697,7 +718,9 @@ export default class Ui {
    * Блокирует select и файл
    */
   private disableSelectAndFile(entity: any): void {
-    $(entity.select).prop('disabled', true);
+    if (entity.choices) {
+      entity.choices.disable();
+    }
     entity.select.style.opacity = '0.5';
     entity.select.style.pointerEvents = 'none';
 
@@ -710,7 +733,9 @@ export default class Ui {
    * Разблокирует select и файл
    */
   private enableSelectAndFile(entity: any): void {
-    $(entity.select).prop('disabled', false);
+    if (entity.choices) {
+      entity.choices.enable();
+    }
     entity.select.style.opacity = '1';
     entity.select.style.pointerEvents = 'auto';
 
