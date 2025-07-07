@@ -1,8 +1,27 @@
+# Development files
 .idea/
 dev/
 src/
+.vscode/
+.git/
+.gitignore
+
+# Config files
 .babelrc
 .eslintrc
 vite.config.js
 postcss.config.js
+tsconfig.json
+eslint.config.mjs
+
+# Dependencies
 yarn.lock
+node_modules/
+
+# Documentation
+README.md
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
