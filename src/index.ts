@@ -14,9 +14,10 @@ import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, Bloc
 import './index.css';
 
 import Ui from './ui';
+import { NativeSelect } from './utils/native-select';
 
 import { IconText } from '@codexteam/icons';
-import type { ActionConfig, CardWithSelectToolData, CardWithSelectConfig, EntityType } from './types/types';
+import type { CardWithSelectToolData, CardWithSelectConfig, EntityType } from './types/types';
 
 type TermToolConstructorOptions = BlockToolConstructorOptions<CardWithSelectToolData, CardWithSelectConfig>;
 
@@ -24,6 +25,11 @@ type TermToolConstructorOptions = BlockToolConstructorOptions<CardWithSelectTool
  * Implementation of TermTool class
  */
 export default class CardWithSelectTool implements BlockTool {
+  /**
+   * Default maximum number of entities
+   */
+  private static readonly DEFAULT_MAX_ENTITY_QUANTITY = 3;
+
   /**
    * Editor.js API instance
    */
@@ -67,7 +73,7 @@ export default class CardWithSelectTool implements BlockTool {
     this.config = {
       endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
       endpointOne: config?.endpointOne ?? '/blog/ajax-blog-by-id?id=1',
-      maxEntityQuantity: config?.maxEntityQuantity ?? 3,
+      maxEntityQuantity: config?.maxEntityQuantity ?? CardWithSelectTool.DEFAULT_MAX_ENTITY_QUANTITY,
       additionalRequestData: config?.additionalRequestData,
       additionalRequestHeaders: config?.additionalRequestHeaders,
       types: config?.types,
@@ -122,10 +128,10 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Validate data: check if Image exists
-   * @param savedData — data received after saving
+   * @param _savedData — data received after saving
    * @returns false if saved data is not correct, otherwise true
    */
-  public validate(savedData: CardWithSelectToolData): boolean {
+  public validate(_savedData: CardWithSelectToolData): boolean {
     return true;
   }
 
@@ -134,6 +140,7 @@ export default class CardWithSelectTool implements BlockTool {
    */
   public save(): CardWithSelectToolData {
     this._data.items = [];
+
     this.ui.nodes.entities.querySelectorAll('.card-with-select__item').forEach((entity) => {
       const titleElement = entity.querySelector('.card-with-select__item__title');
       const descriptionElement = entity.querySelector('.card-with-select__item__description');
@@ -142,18 +149,21 @@ export default class CardWithSelectTool implements BlockTool {
       const fileDataStr = (entity as HTMLElement).dataset.fileData;
 
       let fileData = null;
-      if (fileDataStr) {
+      if (fileDataStr !== null && fileDataStr !== undefined) {
         try {
           fileData = JSON.parse(fileDataStr);
         } catch (e) {
           console.warn('Ошибка парсинга данных файла:', e);
         }
-      } if (titleElement && descriptionElement && selectElement) {
+      }
+
+      if (titleElement && descriptionElement && selectElement) {
         // Получаем значение из NativeSelect, если он инициализирован
-        const nativeSelectInstance = (entity as any)._nativeSelectInstance;
+        const entityElement = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
+        const nativeSelectInstance = entityElement._nativeSelectInstance;
         let entityId = '';
 
-        if (nativeSelectInstance) {
+        if (nativeSelectInstance !== null && nativeSelectInstance !== undefined) {
           entityId = nativeSelectInstance.getValue() || '';
         } else {
           entityId = selectElement.value || '';
@@ -205,7 +215,7 @@ export default class CardWithSelectTool implements BlockTool {
    * @param event - editor.js custom paste event
    *                              {@link https://github.com/codex-team/editor.js/blob/master/types/tools/paste-events.d.ts}
    */
-  public async onPaste(event: PasteEvent): Promise<void> {
+  public onPaste(event: PasteEvent): void {
     switch (event.type) {
     }
   }

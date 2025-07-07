@@ -25,19 +25,18 @@ export interface ActionConfig {
   /**
    * An optional action function to be executed when the tune is activated.
    */
-  action?: Function;
+  action?: (data: unknown) => void;
 }
 
 /**
  * CardWithSelectToolData type representing the input and output data format for the card with select tool, including optional custome actions.
  */
-export type CardWithSelectToolData<Actions = {}> = {
+export interface CardWithSelectToolData {
   /**
    * Term
    */
   items: EntityType[];
-
-} & (Actions extends Record<string, boolean> ? Actions : {});
+}
 
 /**
  *
