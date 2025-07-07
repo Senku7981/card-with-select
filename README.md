@@ -34,6 +34,7 @@ yarn add card-with-select-tool
 
 ## Использование
 
+
 ```javascript
 import EditorJS from '@editorjs/editorjs';
 import CardWithSelectTool from 'card-with-select-tool';
