@@ -65,6 +65,7 @@ export class NativeSelect {
 
         // Создаем стрелку
         const arrow = make('div', ['native-select-arrow']);
+
         arrow.innerHTML = '▼';
 
         // Создаем dropdown
@@ -91,6 +92,7 @@ export class NativeSelect {
         if (this.config.searchEnabled) {
             this.input.addEventListener('input', (e) => {
                 const query = (e.target as HTMLInputElement).value;
+
                 this.handleSearch(query);
             });
         }
@@ -127,11 +129,14 @@ export class NativeSelect {
     }
 
     private open(): void {
-        if (this.isOpen) return;
+        if (this.isOpen) {
+            return;
+        }
 
         this.isOpen = true;
         this.container.classList.add('native-select-open');
-        this.dropdown.style.display = 'block';
+        // Не устанавливаем display: block напрямую, используем CSS классы
+        // this.dropdown.style.display = 'block';
 
         // Если есть поиск и поле пустое, показываем все опции
         if (this.config.searchEnabled && this.input.value === '') {
@@ -140,11 +145,14 @@ export class NativeSelect {
     }
 
     private close(): void {
-        if (!this.isOpen) return;
+        if (!this.isOpen) {
+            return;
+        }
 
         this.isOpen = false;
         this.container.classList.remove('native-select-open');
-        this.dropdown.style.display = 'none';
+        // Не устанавливаем display: none напрямую, используем CSS классы
+        // this.dropdown.style.display = 'none';
     }
 
     private handleSearch(query: string): void {
@@ -155,17 +163,18 @@ export class NativeSelect {
         this.searchTimer = window.setTimeout(() => {
             if (query.length < 2) {
                 this.showAllOptions();
+
                 return;
             }
 
             if (this.onSearchCallback) {
                 this.showLoading();
                 this.onSearchCallback(query)
-                    .then(results => {
+                    .then((results) => {
                         this.setOptions(results);
                         this.renderOptions();
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         console.error('Search error:', error);
                         this.showError();
                     });
@@ -174,6 +183,7 @@ export class NativeSelect {
                 const filtered = this.options.filter(option =>
                     option.text.toLowerCase().includes(query.toLowerCase())
                 );
+
                 this.renderOptions(filtered);
             }
         }, 300);
@@ -196,12 +206,13 @@ export class NativeSelect {
 
         if (options.length === 0) {
             this.optionsList.innerHTML = `<div class="native-select-no-results">${this.config.noResultsText}</div>`;
+
             return;
         }
 
         this.optionsList.innerHTML = '';
 
-        options.forEach(option => {
+        options.forEach((option) => {
             const optionElement = make('div', ['native-select-option'], {
                 'data-value': option.id,
             });
@@ -226,11 +237,12 @@ export class NativeSelect {
         this.selectElement.value = option.id;
 
         // Обновляем визуальное состояние
-        this.optionsList.querySelectorAll('.native-select-option').forEach(el => {
+        this.optionsList.querySelectorAll('.native-select-option').forEach((el) => {
             el.classList.remove('native-select-option-selected');
         });
 
         const selectedElement = this.optionsList.querySelector(`[data-value="${option.id}"]`);
+
         if (selectedElement) {
             selectedElement.classList.add('native-select-option-selected');
         }
@@ -248,6 +260,7 @@ export class NativeSelect {
 
     private focusFirstOption(): void {
         const firstOption = this.optionsList.querySelector('.native-select-option') as HTMLElement;
+
         if (firstOption) {
             firstOption.focus();
         }
@@ -258,12 +271,19 @@ export class NativeSelect {
         this.options = options;
     }
 
+    public renderInitialOptions(): void {
+        if (this.options.length > 0) {
+            this.renderOptions();
+        }
+    }
+
     public getValue(): string {
         return this.selectedValue;
     }
 
     public setValue(value: string): void {
         const option = this.options.find(opt => opt.id === value);
+
         if (option) {
             this.selectOption(option);
         }
@@ -274,7 +294,7 @@ export class NativeSelect {
         this.input.value = '';
         this.selectElement.value = '';
 
-        this.optionsList.querySelectorAll('.native-select-option').forEach(el => {
+        this.optionsList.querySelectorAll('.native-select-option').forEach((el) => {
             el.classList.remove('native-select-option-selected');
         });
 

@@ -74,24 +74,39 @@
     border-radius: 4px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    max-height: 300px;
+    max-height: 160px;
     overflow-y: auto;
+    overflow-x: hidden;
     display: none;
-    margin-top: 8px;
+    margin-top: 2px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.native-select-open .native-select-dropdown {
+    display: block;
+    visibility: visible;
+    opacity: 1;
 }
 
 .native-select-options {
-    padding: 8px 0;
+    padding: 2px 0;
+    min-height: 32px;
 }
 
 .native-select-option {
-    padding: 14px 18px;
+    padding: 6px 12px;
     color: #6788F3;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    line-height: 1.5;
+    line-height: 1.2;
     border-bottom: 1px solid rgba(103, 136, 243, 0.1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .native-select-option:hover {
@@ -110,12 +125,12 @@
 .native-select-loading,
 .native-select-error,
 .native-select-no-results {
-    padding: 12px 16px;
+    padding: 8px 12px;
     color: rgba(103, 136, 243, 0.6);
-    font-size: 13px;
+    font-size: 12px;
     font-style: italic;
     text-align: center;
-    line-height: 1.4;
+    line-height: 1.2;
 }
 
 .native-select-disabled {
@@ -224,11 +239,9 @@
 .card-with-select__item__clear-button {
     position: absolute;
     right: 16px;
-    top: 88px;
-    
+    top: 135px;
     width: 20px;
     height: 20px;
-    
     background: #ff4757;
     color: white;
     border: none;

@@ -261,9 +261,14 @@ export default class Ui {
         // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
         (entity.entity as HTMLElement & { _nativeSelectInstance?: NativeSelect })._nativeSelectInstance = entity.choices;
 
-        // ⭐ ЗАГРУЖАЕМ НАЧАЛЬНЫЙ СПИСОК СТАТЕЙ
+        // Загружаем начальный список статей
         try {
           const response = await fetch(`${this.config.endpoint}`);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const data = await response.json() as {
             results?: {
               id: string;
@@ -279,6 +284,8 @@ export default class Ui {
             }));
 
             entity.choices.setOptions(options);
+            // Принудительно отрендерим опции после загрузки
+            entity.choices.renderInitialOptions();
           }
         } catch (error) {
           console.error('Ошибка при загрузке начального списка статей:', error);
@@ -287,7 +294,15 @@ export default class Ui {
         // Настраиваем поиск
         entity.choices.onSearch(async (query: string) => {
           try {
+            console.log('Поиск статей по запросу:', query);
             const response = await fetch(`${this.config.endpoint}?q=${encodeURIComponent(query)}`);
+
+            console.log('Статус ответа поиска:', response.status);
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json() as {
               results?: {
                 id: string;
@@ -295,12 +310,18 @@ export default class Ui {
               }[];
             };
 
+            console.log('Данные поиска:', data);
+
             if (data.results && Array.isArray(data.results)) {
-              return data.results.map(item => ({
+              const searchResults = data.results.map(item => ({
                 id: item.id,
                 text: item.text,
                 selected: false,
               }));
+
+              console.log('Результаты поиска:', searchResults);
+
+              return searchResults;
             }
 
             return [];
