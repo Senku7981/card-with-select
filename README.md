@@ -59,7 +59,7 @@ const editor = new EditorJS({
 ### Использование через CDN
 
 ```html
-<script src="https://unpkg.com/card-with-select-tool@2.10.2/dist/card-with-select.umd.js"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
 <script>
   const editor = new EditorJS({
     holder: 'editorjs',
