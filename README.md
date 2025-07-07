@@ -29,17 +29,8 @@ npm install card-with-select-tool
 
 или
 
-```bash
+````bash
 yarn add card-with-select-tool
-```
-
-Для разработки:
-
-```bash
-npm install --legacy-peer-deps
-# или
-yarn install
-```
 
 ## Использование
 
@@ -62,7 +53,7 @@ const editor = new EditorJS({
     },
   },
 });
-```
+````
 
 ### Использование через CDN
 
