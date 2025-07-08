@@ -1,23 +1,12 @@
 import { make } from './dom';
-
-interface NativeSelectOption {
-    id: string;
-    text: string;
-    selected?: boolean;
-}
-
-interface NativeSelectConfig {
-    placeholder?: string;
-    searchEnabled?: boolean;
-    loadingText?: string;
-    noResultsText?: string;
-    searchPlaceholder?: string;
-}
+import type { NativeSelectOption } from '../types/native-select-option.interface';
+import type { NativeSelectConfig } from '../types/native-select-config.interface';
 
 /**
  * Нативный кастомный select с поиском
+ * Native custom select with search
  */
-export class NativeSelect {
+class NativeSelect {
     private selectElement: HTMLSelectElement;
     private container!: HTMLElement;
     private input!: HTMLInputElement;
@@ -25,9 +14,9 @@ export class NativeSelect {
     private optionsList!: HTMLElement;
     private config: NativeSelectConfig;
     private options: NativeSelectOption[] = [];
-    private isOpen = false;
+    private isOpen: boolean = false;
     private searchTimer: number = 0;
-    private selectedValue = '';
+    private selectedValue: string = '';
     private onChangeCallback?: (value: string) => void;
     private onSearchCallback?: (query: string) => Promise<NativeSelectOption[]>;
 
@@ -97,14 +86,12 @@ export class NativeSelect {
             });
         }
 
-        // Клик вне элемента
         document.addEventListener('click', (e) => {
             if (!this.container.contains(e.target as Node)) {
                 this.close();
             }
         });
 
-        // Keyboard navigation
         this.input.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -266,7 +253,6 @@ export class NativeSelect {
         }
     }
 
-    // Публичные методы
     public setOptions(options: NativeSelectOption[]): void {
         this.options = options;
     }
@@ -321,8 +307,14 @@ export class NativeSelect {
         this.onChangeCallback = callback;
     }
 
+    /**
+     * Destroy the native select instance
+     * Уничтожить экземпляр нативного select
+     */
     public destroy(): void {
         this.container.remove();
         this.selectElement.style.display = '';
     }
 }
+
+export { NativeSelect };

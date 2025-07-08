@@ -1,59 +1,25 @@
 import { make } from './utils/dom';
 import type { API } from '@editorjs/editorjs';
-import type { CardWithSelectConfig } from './types/types';
+import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
+import type { ConstructorParams } from './types/constructor-params.interface';
+import type { EntityResponse } from './types/entity-response.interface';
 import { IconTrash } from '@codexteam/icons';
 import { NativeSelect } from './utils/native-select';
 
 /**
- * ConstructorParams interface representing parameters for the Ui class constructor.
- */
-interface ConstructorParams {
-  /**
-   * Editor.js API.
-   */
-  api: API;
-  /**
-   * Configuration for the card with select.
-   */
-  config: CardWithSelectConfig;
-  /**
-   * Flag indicating if the UI is in read-only mode.
-   */
-  readOnly: boolean;
-}
-
-interface EntityResponse {
-  /**
-   * Editor.js API.
-   */
-  api: API;
-  /**
-   * Configuration for the image.
-   */
-  config: CardWithSelectConfig;
-  /**
-   * Flag indicating if the UI is in read-only mode.
-   */
-  readOnly: boolean;
-}
-
-interface EntityResponse {
-  success: boolean;
-  data: {
-    id: string;
-    text: string;
-  };
-}
-
-/**
  * Class for working with UI:
+ * Класс для работы с UI:
  *  - rendering base structure
+ *    рендеринг базовой структуры
  *  - show/hide preview
+ *    показ/скрытие превью
  *  - apply tune view
+ *    применение настроек отображения
  */
-export default class Ui {
+class Ui {
   /**
    * Nodes representing various elements in the UI.
+   * Узлы, представляющие различные элементы в UI.
    */
   public nodes: {
     entities: HTMLElement;
@@ -997,10 +963,12 @@ export default class Ui {
       return '0 Bytes';
     }
 
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const kilobyte: number = 1024;
+    const sizes: string[] = ['Bytes', 'KB', 'MB', 'GB'];
+    const index: number = Math.floor(Math.log(bytes) / Math.log(kilobyte));
 
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(kilobyte, index)).toFixed(1)) + ' ' + sizes[index];
   }
 }
+
+export { Ui };

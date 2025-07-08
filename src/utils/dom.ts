@@ -1,24 +1,27 @@
 /**
  * Helper for making Elements with attributes
- * @param tagName           - new Element tag name
- * @param classNames  - list or name of CSS class
- * @param attributes        - any attributes
- * @returns
+ * Помощник для создания элементов с атрибутами
+ * @param tagName - new Element tag name / имя тега нового элемента
+ * @param classNames - list or name of CSS class / список или имя CSS класса
+ * @param attributes - any attributes / любые атрибуты
+ * @returns HTMLElement / возвращает HTML элемент
  */
-export function make(tagName: string, classNames: string[] | string | null = null, attributes: { [key: string]: string | boolean } = {}): HTMLElement {
-  const el = document.createElement(tagName);
+function make(tagName: string, classNames: string[] | string | null = null, attributes: { [key: string]: string | boolean } = {}): HTMLElement {
+  const element: HTMLElement = document.createElement(tagName);
 
   if (Array.isArray(classNames)) {
-    el.classList.add(...classNames);
+    element.classList.add(...classNames);
   } else if (classNames !== null) {
-    el.classList.add(classNames);
+    element.classList.add(classNames);
   }
 
-  for (const attrName in attributes) {
-    if (attributes.hasOwnProperty(attrName)) {
-      (el as unknown as { [key: string]: string | boolean })[attrName] = attributes[attrName];
+  for (const attributeName in attributes) {
+    if (attributes.hasOwnProperty(attributeName)) {
+      (element as unknown as { [key: string]: string | boolean })[attributeName] = attributes[attributeName];
     }
   }
 
-  return el;
+  return element;
 }
+
+export { make };

@@ -1,11 +1,17 @@
 /**
  * Term Tool for the Editor.js
+ * Инструмент Term для Editor.js
  *
  * To developers.
+ * Для разработчиков.
  * To simplify Tool structure, we split it to 4 parts:
+ * Для упрощения структуры Tool, мы разделили его на 4 части:
  *  1) index.ts — main Tool's interface, public API and methods for working with data
+ *     index.ts — основной интерфейс Tool, публичное API и методы для работы с данными
  *  2) uploader.ts — module that has methods for sending files via AJAX: from device, by URL or File pasting
+ *     uploader.ts — модуль с методами для отправки файлов через AJAX: с устройства, по URL или вставка файлов
  *  3) ui.ts — module for UI manipulations: render, showing preloader, etc
+ *     ui.ts — модуль для манипуляций с UI: рендеринг, показ прелоадера и т.д.
  */
 
 import type { MenuConfig } from '@editorjs/editorjs/types/tools';
@@ -13,45 +19,53 @@ import { IconPlus } from '@codexteam/icons';
 import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, BlockTool, BlockAPI, PasteEvent } from '@editorjs/editorjs';
 import './index.css';
 
-import Ui from './ui';
+import { Ui } from './ui';
 import type { NativeSelect } from './utils/native-select';
 
 import { IconText } from '@codexteam/icons';
-import type { CardWithSelectToolData, CardWithSelectConfig, EntityType } from './types/types';
-
-type TermToolConstructorOptions = BlockToolConstructorOptions<CardWithSelectToolData, CardWithSelectConfig>;
+import type { CardWithSelectToolData } from './types/card-with-select-tool-data.interface';
+import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
+import type { EntityType } from './types/entity.interface';
+import type { TermToolConstructorOptions } from './types/term-tool-constructor-options.type';
 
 /**
  * Implementation of TermTool class
+ * Реализация класса TermTool
  */
-export default class CardWithSelectTool implements BlockTool {
+class CardWithSelectTool implements BlockTool {
   /**
    * Default maximum number of entities
+   * Максимальное количество сущностей по умолчанию
    */
-  private static readonly DEFAULT_MAX_ENTITY_QUANTITY = 3;
+  private static readonly DEFAULT_MAX_ENTITY_QUANTITY: number = 3;
 
   /**
    * Editor.js API instance
+   * Экземпляр API Editor.js
    */
   private api: API;
 
   /**
    * Current Block API instance
+   * Экземпляр API текущего блока
    */
   private block: BlockAPI;
 
   /**
    * Configuration for the CardWithSelectTool
+   * Конфигурация для CardWithSelectTool
    */
   private config: CardWithSelectConfig;
 
   /**
    * UI module instance
+   * Экземпляр модуля UI
    */
   private ui: Ui;
 
   /**
    * Stores current block data internally
+   * Внутреннее хранение данных текущего блока
    */
   private _data: { items: EntityType[] };
 
@@ -62,6 +76,13 @@ export default class CardWithSelectTool implements BlockTool {
    * @param tool.api - Editor.js API
    * @param tool.readOnly - read-only mode flag
    * @param tool.block - current Block API
+   * 
+   * @param tool - свойства инструмента полученные из editor.js
+   * @param tool.data - ранее сохранённые данные
+   * @param tool.config - пользовательская конфигурация для Tool
+   * @param tool.api - API Editor.js
+   * @param tool.readOnly - флаг режима только для чтения
+   * @param tool.block - API текущего блока
    */
   // todo endpoint
   constructor({ data, config, api, readOnly, block }: TermToolConstructorOptions) {
@@ -69,6 +90,7 @@ export default class CardWithSelectTool implements BlockTool {
     this.block = block;
     /**
      * Tool's initial config
+     * Начальная конфигурация Tool
      */
     this.config = {
       endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
@@ -84,6 +106,7 @@ export default class CardWithSelectTool implements BlockTool {
 
     /**
      * Module for working with UI
+     * Модуль для работы с UI
      */
     this.ui = new Ui({
       api,
@@ -93,6 +116,7 @@ export default class CardWithSelectTool implements BlockTool {
 
     /**
      * Set saved state
+     * Установка сохранённого состояния
      */
     this._data = {
       items: [],
@@ -102,6 +126,7 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Notify core that read-only mode is supported
+   * Уведомить ядро о поддержке режима только для чтения
    */
   public static get isReadOnlySupported(): boolean {
     return true;
@@ -109,8 +134,11 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Get Tool toolbox settings
+   * Получить настройки панели инструментов Tool
    * icon - Tool icon's SVG
+   * icon - SVG иконка Tool
    * title - title to show in toolbox
+   * title - заголовок для отображения в панели инструментов
    */
   public static get toolbox(): ToolboxConfig {
     return {
@@ -121,6 +149,7 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Renders Block content
+   * Рендерит содержимое блока
    */
   public render(): HTMLDivElement {
     return this.ui.render() as HTMLDivElement;
@@ -128,8 +157,9 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Validate data: check if Image exists
-   * @param _savedData — data received after saving
-   * @returns false if saved data is not correct, otherwise true
+   * Валидация данных: проверка существования изображения
+   * @param _savedData — data received after saving / данные полученные после сохранения
+   * @returns false if saved data is not correct, otherwise true / false если сохранённые данные некорректны, иначе true
    */
   public validate(_savedData: CardWithSelectToolData): boolean {
     return true;
@@ -137,11 +167,12 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Return Block data
+   * Возвращает данные блока
    */
   public save(): CardWithSelectToolData {
     this._data.items = [];
 
-    this.ui.nodes.entities.querySelectorAll('.card-with-select__item').forEach((entity) => {
+    this.ui.nodes.entities.querySelectorAll('.card-with-select__item').forEach((entity: Element): void => {
       const titleElement = entity.querySelector('.card-with-select__item__title');
       const descriptionElement = entity.querySelector('.card-with-select__item__description');
       const selectElement = entity.querySelector('select');
@@ -162,16 +193,18 @@ export default class CardWithSelectTool implements BlockTool {
             name: string;
             size?: number;
           };
-        } catch (e) {
-          console.warn('Ошибка парсинга данных файла:', e);
+        } catch (error: unknown) {
+          console.warn('Ошибка парсинга данных файла:', error);
+          console.warn('Error parsing file data:', error);
         }
       }
 
       if (titleElement && descriptionElement) {
         // Получаем значение из NativeSelect, если он инициализирован
-        const entityElement = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
-        const nativeSelectInstance = entityElement._nativeSelectInstance;
-        let entityId = '';
+        // Get value from NativeSelect if it's initialized
+        const entityElement: HTMLElement & { _nativeSelectInstance?: NativeSelect } = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
+        const nativeSelectInstance: NativeSelect | undefined = entityElement._nativeSelectInstance;
+        let entityId: string = '';
 
         if (nativeSelectInstance) {
           entityId = nativeSelectInstance.getValue() || '';
@@ -195,6 +228,7 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Returns configuration for block tunes: level
+   * Возвращает конфигурацию для настроек блока: уровень
    * @returns MenuConfig
    */
   public renderSettings(): MenuConfig {
@@ -202,27 +236,32 @@ export default class CardWithSelectTool implements BlockTool {
       {
         icon: IconPlus,
         label: this.api.i18n.t('Добавить ссылку на статью'),
-        onActivate: () => this.addNewItemWithType('article'),
+        onActivate: (): void => this.addNewItemWithType('article'),
         closeOnActivate: true,
         isActive: false,
       },
       {
         icon: IconPlus,
         label: this.api.i18n.t('Добавить произвольную ссылку'),
-        onActivate: () => this.addNewItemWithType('custom'),
+        onActivate: (): void => this.addNewItemWithType('custom'),
         closeOnActivate: true,
         isActive: false,
       },
       {
         icon: IconPlus,
         label: this.api.i18n.t('Добавить файл'),
-        onActivate: () => this.addNewItemWithType('file'),
+        onActivate: (): void => this.addNewItemWithType('file'),
         closeOnActivate: true,
         isActive: false,
       },
     ];
   }
 
+  /**
+   * Add new item with specified type
+   * Добавить новый элемент с указанным типом
+   * @param type - type of the item / тип элемента
+   */
   protected addNewItemWithType(type: 'article' | 'custom' | 'file'): void {
     this.ui.addNewItemWithType('', '', null, type);
   }
@@ -288,8 +327,11 @@ export default class CardWithSelectTool implements BlockTool {
 
   /**
    * Return Tool data
+   * Возвращает данные Tool
    */
   private get data(): CardWithSelectToolData {
     return this._data;
   }
 }
+
+export default CardWithSelectTool;

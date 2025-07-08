@@ -1,41 +1,52 @@
-import Codex from 'eslint-config-codex';
-import { plugin as TsPlugin, parser as TsParser } from 'typescript-eslint';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'eslint/config';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import prettierPlugin from 'eslint-plugin-prettier';
 
-export default [
-  ...Codex,
-  {
-    files: ['src/**/*.ts'],
-    languageOptions: {
-      parser: TsParser,
-      parserOptions: {
-        project: './tsconfig.json',
-        tsconfigRootDir: './',
-        sourceType: 'module',
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig({
+  root: true,
+  ignorePatterns: [
+    'dev/**',
+    'eslint.config.mjs',
+    'vite.config.js',
+    'postcss.config.js',
+  ],
+  overrides: [
+    {
+      files: ['**/*.{js,ts,vue}'],
+      languageOptions: {
+        parser: tsParser,
+        parserOptions: {
+          ecmaVersion: 2021,
+          sourceType: 'module',
+          tsconfigRootDir: __dirname,
+          project: ['./tsconfig.json'],
+        },
+        globals: { defineOptions: 'readonly' },
+      },
+      plugins: {
+        '@typescript-eslint': tsPlugin,
+        prettier: prettierPlugin,
+      },
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:prettier/recommended',
+      ],
+      rules: {
+        'prettier/prettier': 'error',
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          { argsIgnorePattern: '^_' },
+        ],
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
       },
     },
-    rules: {
-      'jsdoc/require-jsdoc': ['off'],
-      'n/no-missing-import': ['off'],
-      'n/no-unsupported-features/node-builtins': ['off'],
-      'jsdoc/require-returns-description': ['off'],
-      '@typescript-eslint/naming-convention': [
-        'error',
-        {
-          selector: 'variable',
-          format: ['camelCase'],
-          leadingUnderscore: 'allow',
-        },
-      ],
-      '@typescript-eslint/no-wrapper-object-types': 'error',
-      '@typescript-eslint/prefer-function-type': 'error',
-    },
-  },
-  {
-    ignores: [
-      'dev/**',
-      'eslint.config.mjs',
-      'vite.config.js',
-      'postcss.config.js',
-    ],
-  },
-];
+  ],
+});
