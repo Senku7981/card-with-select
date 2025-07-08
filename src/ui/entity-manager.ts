@@ -1,5 +1,6 @@
 import { make } from '../utils/dom';
 import { IconTrash } from '@codexteam/icons';
+
 import type { API } from '@editorjs/editorjs';
 import type { CardWithSelectConfig } from '../types/card-with-select-config.interface';
 import type { FileHandler } from './file-handler';
@@ -14,7 +15,6 @@ import type { DOMRenderer } from './dom-renderer';
 class EntityManager {
     private api: API;
     private config: CardWithSelectConfig;
-    private readOnly: boolean;
     private fileHandler: FileHandler;
     private blockingStateManager: BlockingStateManager;
     private selectManager: SelectManager;
@@ -23,7 +23,6 @@ class EntityManager {
     constructor(
         api: API,
         config: CardWithSelectConfig,
-        readOnly: boolean,
         fileHandler: FileHandler,
         blockingStateManager: BlockingStateManager,
         selectManager: SelectManager,
@@ -31,7 +30,6 @@ class EntityManager {
     ) {
         this.api = api;
         this.config = config;
-        this.readOnly = readOnly;
         this.fileHandler = fileHandler;
         this.blockingStateManager = blockingStateManager;
         this.selectManager = selectManager;
@@ -48,10 +46,10 @@ class EntityManager {
 
         return {
             title: make('div', [CSS.textInput, CSS.input, CSS.titleInput], {
-                contentEditable: !this.readOnly,
+                contentEditable: true,
             }),
             description: make('div', [CSS.textInput, CSS.descriptionInput, CSS.input], {
-                contentEditable: !this.readOnly,
+                contentEditable: true,
             }),
             select: make('select', [CSS.textInput, CSS.input], {}) as HTMLSelectElement,
             selectClear: make('button', ['card-with-select__item__clear-button'], {
@@ -151,7 +149,7 @@ class EntityManager {
 
         // File input change
         // Изменение файлового input
-        entity.fileInput.addEventListener('change', (event: Event): void => {
+        entity.fileInput.addEventListener('change', async (event: Event): Promise<void> => {
             const fileFromInput: File | undefined = (event.target as HTMLInputElement).files?.[0];
 
             if (fileFromInput) {
@@ -159,7 +157,7 @@ class EntityManager {
                     this.blockingStateManager.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
                     return;
                 }
-                this.handleFileUpload(fileFromInput, entity);
+                await this.handleFileUpload(fileFromInput, entity);
             }
         });
 
@@ -168,9 +166,11 @@ class EntityManager {
         entity.fileZone.addEventListener('dragover', (event: DragEvent): void => {
             event.preventDefault();
             event.stopPropagation();
+
             if (this.blockingStateManager.isSelectOrCustomLinkFilled(entity)) {
                 return;
             }
+
             entity.fileZone.classList.add('card-with-select__item__file-zone--dragover');
         });
 
@@ -179,7 +179,7 @@ class EntityManager {
             entity.fileZone.classList.remove('card-with-select__item__file-zone--dragover');
         });
 
-        entity.fileZone.addEventListener('drop', (event: DragEvent): void => {
+        entity.fileZone.addEventListener('drop', async (event: DragEvent): Promise<void> => {
             event.preventDefault();
             event.stopPropagation();
             entity.fileZone.classList.remove('card-with-select__item__file-zone--dragover');
@@ -191,7 +191,7 @@ class EntityManager {
 
             const files: FileList | undefined = event.dataTransfer?.files;
             if (files && files.length > 0) {
-                this.handleFileUpload(files[0], entity);
+                await this.handleFileUpload(files[0], entity);
             }
         });
     }
@@ -217,8 +217,8 @@ class EntityManager {
      * @param file - file to upload / файл для загрузки
      * @param entity - entity object / объект сущности
      */
-    private handleFileUpload(file: File, entity: any): void {
-        this.fileHandler.handleFileUpload(
+    private async handleFileUpload(file: File, entity: any): Promise<void> {
+        await this.fileHandler.handleFileUpload(
             file,
             entity,
             (entityObj: any, fileObj: File): void => {

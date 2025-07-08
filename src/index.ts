@@ -1,36 +1,34 @@
 /**
- * Term Tool for the Editor.js
- * Инструмент Term для Editor.js
+ * Card With Select Tool for the Editor.js
+ * Инструмент Card With Select для Editor.js
  *
  * To developers.
  * Для разработчиков.
- * To simplify Tool structure, we split it to 4 parts:
- * Для упрощения структуры Tool, мы разделили его на 4 части:
+ * To simplify Tool structure, we split it to multiple parts:
+ * Для упрощения структуры Tool, мы разделили его на несколько частей:
  *  1) index.ts — main Tool's interface, public API and methods for working with data
  *     index.ts — основной интерфейс Tool, публичное API и методы для работы с данными
- *  2) uploader.ts — module that has methods for sending files via AJAX: from device, by URL or File pasting
- *     uploader.ts — модуль с методами для отправки файлов через AJAX: с устройства, по URL или вставка файлов
- *  3) ui.ts — module for UI manipulations: render, showing preloader, etc
- *     ui.ts — модуль для манипуляций с UI: рендеринг, показ прелоадера и т.д.
+ *  2) ui.ts — module for UI manipulations: render, coordination of managers, etc
+ *     ui.ts — модуль для манипуляций с UI: рендеринг, координация менеджеров и т.д.
+ *  3) ui/ — managers for different aspects: file handling, DOM rendering, etc
+ *     ui/ — менеджеры для разных аспектов: обработка файлов, рендеринг DOM и т.д.
  */
-
-import type { MenuConfig } from '@editorjs/editorjs/types/tools';
 import { IconPlus } from '@codexteam/icons';
-import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, BlockTool, BlockAPI, PasteEvent } from '@editorjs/editorjs';
+import { IconText } from '@codexteam/icons';
+import { Ui } from './ui';
 import './index.css';
 
-import Ui from './ui';
+import type { MenuConfig } from '@editorjs/editorjs/types/tools';
+import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, BlockTool, BlockAPI, PasteEvent } from '@editorjs/editorjs';
 import type { NativeSelect } from './utils/native-select';
-
-import { IconText } from '@codexteam/icons';
 import type { CardWithSelectToolData } from './types/card-with-select-tool-data.interface';
 import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
 import type { EntityType } from './types/entity.interface';
 import type { TermToolConstructorOptions } from './types/term-tool-constructor-options.type';
 
 /**
- * Implementation of TermTool class
- * Реализация класса TermTool
+ * Implementation of CardWithSelectTool class
+ * Реализация класса CardWithSelectTool
  */
 class CardWithSelectTool implements BlockTool {
   /**
@@ -74,18 +72,16 @@ class CardWithSelectTool implements BlockTool {
    * @param tool.data - previously saved data
    * @param tool.config - user config for Tool
    * @param tool.api - Editor.js API
-   * @param tool.readOnly - read-only mode flag
    * @param tool.block - current Block API
    * 
    * @param tool - свойства инструмента полученные из editor.js
    * @param tool.data - ранее сохранённые данные
    * @param tool.config - пользовательская конфигурация для Tool
    * @param tool.api - API Editor.js
-   * @param tool.readOnly - флаг режима только для чтения
    * @param tool.block - API текущего блока
    */
-  // todo endpoint
-  constructor({ data, config, api, readOnly, block }: TermToolConstructorOptions) {
+  
+  constructor({ data, config, api, block }: TermToolConstructorOptions) {
     this.api = api;
     this.block = block;
     /**
@@ -111,7 +107,6 @@ class CardWithSelectTool implements BlockTool {
     this.ui = new Ui({
       api,
       config: this.config,
-      readOnly,
     });
 
     /**
@@ -121,15 +116,7 @@ class CardWithSelectTool implements BlockTool {
     this._data = {
       items: [],
     };
-    this.data = data;
-  }
-
-  /**
-   * Notify core that read-only mode is supported
-   * Уведомить ядро о поддержке режима только для чтения
-   */
-  public static get isReadOnlySupported(): boolean {
-    return true;
+    this.data = data ?? { items: [] };
   }
 
   /**
@@ -296,37 +283,35 @@ class CardWithSelectTool implements BlockTool {
   /**
    * Stores all Tool's data
    * Сохраняет все данные Tool
-   * @param data - data in Image Tool format / данные в формате Image Tool
+   * @param data - data in CardWithSelectTool format / данные в формате CardWithSelectTool
    */
   private set data(data: CardWithSelectToolData) {
-    if (data === null) {
+    if (!data || !data.hasOwnProperty('items')) {
+      this.ui.addNewItemWithType('', '', null, 'article');
       return;
     }
-    if (data.hasOwnProperty('items')) {
-      data.items.forEach((item: EntityType): void => {
-        // Backward compatibility: ensure all fields are defined
-        // Обратная совместимость: убеждаемся что все поля определены
-        const safeItem: EntityType = {
-          title: item.title || '',
-          description: item.description || '',
-          entityId: item.entityId || '',
-          customLink: item.customLink || undefined,
-          file: item.file || undefined,
-          linkType: item.linkType || 'article',
-        };
+    
+    data.items.forEach((item: EntityType): void => {
+      // Backward compatibility: ensure all fields are defined
+      // Обратная совместимость: убеждаемся что все поля определены
+      const safeItem: EntityType = {
+        title: item.title || '',
+        description: item.description || '',
+        entityId: item.entityId || '',
+        customLink: item.customLink || undefined,
+        file: item.file || undefined,
+        linkType: item.linkType || 'article',
+      };
 
-        this.ui.addNewItemWithType(
-          safeItem.title,
-          safeItem.description,
-          String(safeItem.entityId),
-          (safeItem.linkType as 'article' | 'custom' | 'file') || 'article',
-          safeItem.customLink,
-          safeItem.file
-        );
-      });
-    } else {
-      this.ui.addNewItemWithType('', '', null, 'article');
-    }
+      this.ui.addNewItemWithType(
+        safeItem.title,
+        safeItem.description,
+        String(safeItem.entityId),
+        (safeItem.linkType as 'article' | 'custom' | 'file') || 'article',
+        safeItem.customLink,
+        safeItem.file
+      );
+    });
   }
 
   /**

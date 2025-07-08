@@ -1,12 +1,13 @@
 import { make } from './utils/dom';
-import type { API } from '@editorjs/editorjs';
-import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
-import type { ConstructorParams } from './types/constructor-params.interface';
 import { FileHandler } from './ui/file-handler';
 import { BlockingStateManager } from './ui/blocking-state-manager';
 import { SelectManager } from './ui/select-manager';
 import { DOMRenderer } from './ui/dom-renderer';
 import { EntityManager } from './ui/entity-manager';
+
+import type { API } from '@editorjs/editorjs';
+import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
+import type { ConstructorParams } from './types/constructor-params.interface';
 
 /**
  * Class for working with UI:
@@ -41,12 +42,6 @@ class Ui {
   private config: CardWithSelectConfig;
 
   /**
-   * Flag indicating if the UI is in read-only mode.
-   * Флаг, указывающий, находится ли UI в режиме только для чтения.
-   */
-  private readOnly: boolean;
-
-  /**
    * File handler instance
    * Экземпляр обработчика файлов
    */
@@ -77,20 +72,17 @@ class Ui {
   private entityManager: EntityManager;
 
   /**
-   * @param ui - image tool Ui module
+   * @param ui - card with select tool Ui module
    * @param ui.api - Editor.js API
    * @param ui.config - user config
-   * @param ui.readOnly - read-only mode flag
    * 
-   * @param ui - модуль UI инструмента изображения
+   * @param ui - модуль UI инструмента карточки с выбором
    * @param ui.api - API Editor.js
    * @param ui.config - пользовательская конфигурация
-   * @param ui.readOnly - флаг режима только для чтения
    */
-  constructor({ api, config, readOnly }: ConstructorParams) {
+  constructor({ api, config }: ConstructorParams) {
     this.api = api;
     this.config = config;
-    this.readOnly = readOnly;
 
     // Initialize managers
     // Инициализируем менеджеры
@@ -101,7 +93,6 @@ class Ui {
     this.entityManager = new EntityManager(
       api,
       config,
-      readOnly,
       this.fileHandler,
       this.blockingStateManager,
       this.selectManager,
@@ -225,4 +216,4 @@ class Ui {
   }
 }
 
-export default Ui;
+export { Ui };

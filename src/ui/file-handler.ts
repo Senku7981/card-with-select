@@ -20,56 +20,70 @@ class FileHandler {
      * @param onSuccess - success callback / колбэк успеха
      * @param onError - error callback / колбэк ошибки
      */
-    public handleFileUpload(
+    public async handleFileUpload(
         file: File,
         entity: any,
         onProgress: (entity: any, file: File) => void,
         onSuccess: (entity: any, fileData: any) => void,
         onError: (entity: any, error: Error) => void
-    ): void {
+    ): Promise<void> {
         onProgress(entity, file);
 
+        try {
+            const fileData = await this.uploadFileToServer(file);
+            onSuccess(entity, fileData);
+        } catch (error) {
+            console.warn('File upload to server failed, using local blob:', error);
+            const fileData = {
+                url: URL.createObjectURL(file),
+                name: file.name,
+                size: file.size,
+                isBlob: true,
+            };
+            onSuccess(entity, fileData);
+        }
+    }
+
+    /**
+     * Upload file to server
+     * Загрузить файл на сервер
+     * @param file - file to upload / файл для загрузки
+     * @returns Promise with file data / Promise с данными файла
+     */
+    private async uploadFileToServer(file: File): Promise<{
+        url: string;
+        name: string;
+        size: number;
+    }> {
         const formData: FormData = new FormData();
         formData.append('file', file);
 
         const uploadUrl: string = '/upload/file';
 
-        fetch(uploadUrl, {
+        const response: Response = await fetch(uploadUrl, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-Token': this.getCSRFToken(),
             },
-        })
-            .then((response: Response) => {
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((data: any) => {
-                if (data.success && data.url) {
-                    const fileData = {
-                        url: data.url,
-                        name: file.name,
-                        size: file.size,
-                    };
-                    onSuccess(entity, fileData);
-                } else {
-                    throw new Error(data.message || 'Upload failed');
-                }
-            })
-            .catch((error: Error) => {
-                console.warn('File upload to server failed, using local blob:', error);
-                const fileData = {
-                    url: URL.createObjectURL(file),
-                    name: file.name,
-                    size: file.size,
-                    isBlob: true,
-                };
-                onSuccess(entity, fileData);
-            });
+        });
+
+        if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status}`);
+        }
+
+        const data: any = await response.json();
+
+        if (data.success && data.url) {
+            return {
+                url: data.url,
+                name: file.name,
+                size: file.size,
+            };
+        } else {
+            throw new Error(data.message || 'Upload failed');
+        }
     }
 
     /**

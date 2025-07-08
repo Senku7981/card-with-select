@@ -1,4 +1,5 @@
 import { make } from '../utils/dom';
+
 import type { FileHandler } from './file-handler';
 
 /**
@@ -93,9 +94,11 @@ class DOMRenderer {
 
         const getFileNameWithoutExtension = (fileName: string): string => {
             const parts: string[] = fileName.split('.');
+
             if (parts.length > 1) {
                 return parts.slice(0, -1).join('.');
             }
+
             return fileName;
         };
 
@@ -267,6 +270,7 @@ class DOMRenderer {
                     : newNameWithoutExtension;
 
                 const currentFileData = JSON.parse(entity.entity.dataset.fileData || '{}');
+
                 currentFileData.displayName = fullFileName;
                 entity.entity.dataset.fileData = JSON.stringify(currentFileData);
             });

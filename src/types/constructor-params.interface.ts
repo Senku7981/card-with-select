@@ -16,11 +16,6 @@ interface ConstructorParams {
      * Конфигурация для карточки с выбором.
      */
     config: CardWithSelectConfig;
-    /**
-     * Flag indicating if the UI is in read-only mode.
-     * Флаг, указывающий, находится ли UI в режиме только для чтения.
-     */
-    readOnly: boolean;
 }
 
 export type { ConstructorParams };
