@@ -17,7 +17,6 @@
 - Визуальные индикаторы типов ссылок (иконки и цветная граница)
 - Ограничение количества карточек
 - Редактирование названий прикрепленных файлов
-- Поддержка read-only режима
 - Нативная реализация без внешних зависимостей
 - Улучшенный UI с увеличенными отступами для комфортной работы
 - **Модульная архитектура** - код разделен на отдельные менеджеры по принципу единственной ответственности
@@ -59,6 +58,8 @@ const editor = new EditorJS({
 
 ### Использование через CDN
 
+#### Базовое подключение
+
 ```html
 <script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
 <script>
@@ -66,6 +67,202 @@ const editor = new EditorJS({
     holder: 'editorjs',
     tools: {
       cardWithSelect: CardWithSelectTool,
+    },
+  });
+</script>
+```
+
+#### Использование с конфигурацией
+
+```html
+<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+<script>
+  const editor = new EditorJS({
+    holder: 'editorjs',
+    tools: {
+      cardWithSelect: {
+        class: CardWithSelectTool,
+        config: {
+          endpoint: '/api/articles/search',
+          endpointOne: '/api/articles/get',
+          maxEntityQuantity: 5,
+          titlePlaceholder: 'Заголовок карточки',
+          descriptionPlaceholder: 'Описание карточки',
+          additionalRequestHeaders: {
+            Authorization: 'Bearer ' + yourAuthToken,
+            'Content-Type': 'application/json',
+          },
+          additionalRequestData: {
+            category: 'blog',
+            status: 'published',
+          },
+        },
+      },
+    },
+  });
+</script>
+```
+
+#### Полный пример с HTML
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editor.js с Card With Select Tool</title>
+    <style>
+      #editorjs {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editorjs"></div>
+
+    <!-- Editor.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <!-- Card With Select Tool -->
+    <script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+
+    <script>
+      const editor = new EditorJS({
+        holder: 'editorjs',
+        placeholder: 'Начните писать или добавьте блок...',
+        tools: {
+          cardWithSelect: {
+            class: CardWithSelectTool,
+            config: {
+              // URL для поиска статей
+              endpoint: '/api/blog/search',
+              // URL для получения конкретной статьи
+              endpointOne: '/api/blog/get-by-id',
+              // Максимум карточек в одном блоке
+              maxEntityQuantity: 3,
+              // Плейсхолдеры для полей
+              titlePlaceholder: 'Название статьи',
+              descriptionPlaceholder: 'Краткое описание',
+              // Дополнительные заголовки для запросов
+              additionalRequestHeaders: {
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'application/json',
+              },
+              // Дополнительные данные для запросов
+              additionalRequestData: {
+                published: true,
+                locale: 'ru',
+              },
+            },
+          },
+        },
+        onReady: () => {
+          console.log('Editor.js готов к работе!');
+        },
+        onChange: (api, event) => {
+          console.log('Контент изменён', event);
+        },
+      });
+
+      // Сохранение данных
+      function saveData() {
+        editor
+          .save()
+          .then((outputData) => {
+            console.log('Данные статьи:', outputData);
+            // Отправка на сервер
+            fetch('/api/articles/save', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(outputData),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log('Статья сохранена:', data);
+              });
+          })
+          .catch((error) => {
+            console.error('Ошибка сохранения:', error);
+          });
+      }
+
+      // Добавляем кнопку сохранения
+      document.addEventListener('DOMContentLoaded', function () {
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Сохранить';
+        saveButton.onclick = saveData;
+        saveButton.style.cssText =
+          'margin: 20px auto; display: block; padding: 10px 20px;';
+        document.body.appendChild(saveButton);
+      });
+    </script>
+  </body>
+</html>
+```
+
+#### Интеграция с PHP (например, Yii2)
+
+```html
+<!-- В layout или view файле -->
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+
+<script>
+  const editor = new EditorJS({
+      holder: 'editorjs',
+      tools: {
+          cardWithSelect: {
+              class: CardWithSelectTool,
+              config: {
+                  endpoint: '<?= \yii\helpers\Url::to(['/api/articles/search']) ?>',
+                  endpointOne: '<?= \yii\helpers\Url::to(['/api/articles/get']) ?>',
+                  maxEntityQuantity: <?= $maxArticles ?? 3 ?>,
+                  titlePlaceholder: '<?= Yii::t('app', 'Article title') ?>',
+                  descriptionPlaceholder: '<?= Yii::t('app', 'Article description') ?>',
+                  additionalRequestHeaders: {
+                      'X-CSRF-Token': '<?= Yii::$app->request->getCsrfToken() ?>',
+                      'X-Requested-With': 'XMLHttpRequest'
+                  },
+                  additionalRequestData: {
+                      category: '<?= $category ?? 'blog' ?>',
+                      language: '<?= Yii::$app->language ?>'
+                  }
+              }
+          }
+      }
+  });
+</script>
+```
+
+#### Использование с другими инструментами
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/paragraph@latest"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+
+<script>
+  const editor = new EditorJS({
+    holder: 'editorjs',
+    tools: {
+      header: Header,
+      paragraph: {
+        class: Paragraph,
+        inlineToolbar: true,
+      },
+      cardWithSelect: {
+        class: CardWithSelectTool,
+        config: {
+          endpoint: '/api/content/search',
+          endpointOne: '/api/content/get',
+          maxEntityQuantity: 4,
+        },
+      },
     },
   });
 </script>
