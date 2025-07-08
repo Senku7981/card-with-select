@@ -1,6 +1,6 @@
 {
   "name": "card-with-select-tool-v1",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "keywords": [
     "codex editor",
     "card",
@@ -11,7 +11,7 @@
   ],
   "description": "Card with Select Tool for Editor.js - allows creating cards with different link types",
   "license": "MIT",
-  "repository": "https://github.com/editor-js/card-with-select",
+  "repository": "https://github.com/Senku7981/card-with-select",
   "files": [
     "dist/**/*"
   ],
