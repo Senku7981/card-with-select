@@ -1,8 +1,5 @@
 /**
  * User configuration of Image block tunes. Allows to add custom tunes through the config
- */
-/**
- * User configuration of Image block tunes. Allows to add custom tunes through the config
  * Пользовательская конфигурация настроек блока изображения. Позволяет добавлять пользовательские настройки через конфигурацию
  */
 interface ActionConfig {

@@ -1,4 +1,4 @@
-import type { ActionConfig } from './action-config.interface.ts';
+import type { ActionConfig } from './action-config.interface';
 
 /**
  * Configuration interface for CardWithSelectTool

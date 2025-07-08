@@ -19,7 +19,7 @@ import { IconPlus } from '@codexteam/icons';
 import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, BlockTool, BlockAPI, PasteEvent } from '@editorjs/editorjs';
 import './index.css';
 
-import { Ui } from './ui';
+import Ui from './ui';
 import type { NativeSelect } from './utils/native-select';
 
 import { IconText } from '@codexteam/icons';
@@ -268,6 +268,7 @@ class CardWithSelectTool implements BlockTool {
 
   /**
    * Specify paste substitutes
+   * Определить заменители для вставки
    * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
    */
   public static get pasteConfig(): PasteConfig {
@@ -277,8 +278,9 @@ class CardWithSelectTool implements BlockTool {
 
   /**
    * Specify paste handlers
+   * Определить обработчики вставки
    * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
-   * @param event - editor.js custom paste event
+   * @param event - editor.js custom paste event / пользовательское событие вставки editor.js
    *                              {@link https://github.com/codex-team/editor.js/blob/master/types/tools/paste-events.d.ts}
    */
   public onPaste(event: PasteEvent): void {
@@ -293,16 +295,18 @@ class CardWithSelectTool implements BlockTool {
 
   /**
    * Stores all Tool's data
-   * @param data - data in Image Tool format
+   * Сохраняет все данные Tool
+   * @param data - data in Image Tool format / данные в формате Image Tool
    */
   private set data(data: CardWithSelectToolData) {
     if (data === null) {
       return;
     }
     if (data.hasOwnProperty('items')) {
-      data.items.forEach((item) => {
+      data.items.forEach((item: EntityType): void => {
+        // Backward compatibility: ensure all fields are defined
         // Обратная совместимость: убеждаемся что все поля определены
-        const safeItem = {
+        const safeItem: EntityType = {
           title: item.title || '',
           description: item.description || '',
           entityId: item.entityId || '',
@@ -315,7 +319,7 @@ class CardWithSelectTool implements BlockTool {
           safeItem.title,
           safeItem.description,
           String(safeItem.entityId),
-          safeItem.linkType,
+          (safeItem.linkType as 'article' | 'custom' | 'file') || 'article',
           safeItem.customLink,
           safeItem.file
         );
