@@ -3,8 +3,8 @@ import type { CardWithSelectToolData } from './card-with-select-tool-data.interf
 import type { CardWithSelectConfig } from './card-with-select-config.interface';
 
 /**
- * Type for CardWithSelectTool constructor options (without readOnly support)
- * Тип для опций конструктора CardWithSelectTool (без поддержки readOnly)
+ * Type for CardWithSelectTool constructor options 
+ * Тип для опций конструктора CardWithSelectTool
  */
 type TermToolConstructorOptions = {
     /**

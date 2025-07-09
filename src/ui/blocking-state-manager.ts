@@ -69,7 +69,6 @@ class BlockingStateManager {
         entity.customLink.style.opacity = '0.5';
         entity.customLink.style.cursor = 'not-allowed';
         entity.customLink.title = 'Очистите выбранную ссылку, чтобы использовать это поле';
-
         entity.fileZone.style.opacity = '0.5';
         entity.fileZone.style.pointerEvents = 'none';
         entity.fileZone.title = 'Очистите выбранную ссылку, чтобы прикрепить файл';
@@ -100,9 +99,9 @@ class BlockingStateManager {
         if (entity.choices) {
             entity.choices.disable();
         }
+
         entity.select.style.opacity = '0.5';
         entity.select.style.pointerEvents = 'none';
-
         entity.customLink.disabled = true;
         entity.customLink.style.opacity = '0.5';
         entity.customLink.style.cursor = 'not-allowed';
@@ -118,6 +117,7 @@ class BlockingStateManager {
         if (entity.choices) {
             entity.choices.enable();
         }
+
         entity.select.style.opacity = '1';
         entity.select.style.pointerEvents = 'auto';
 
@@ -136,6 +136,7 @@ class BlockingStateManager {
         if (entity.choices) {
             entity.choices.disable();
         }
+
         entity.select.style.opacity = '0.5';
         entity.select.style.pointerEvents = 'none';
 
@@ -153,6 +154,7 @@ class BlockingStateManager {
         if (entity.choices) {
             entity.choices.enable();
         }
+        
         entity.select.style.opacity = '1';
         entity.select.style.pointerEvents = 'auto';
 
