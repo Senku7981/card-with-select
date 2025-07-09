@@ -126,7 +126,7 @@ const editor = new EditorJS({
     <!-- Editor.js -->
     <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
     <!-- Card With Select Tool -->
-    <script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+    <script src="https://unpkg.com/card-with-select-tool-v1@2.0.4/dist/card-with-select.umd.js"></script>
 
     <script>
       const editor = new EditorJS({
@@ -209,7 +209,7 @@ const editor = new EditorJS({
 ```html
 <!-- В layout или view файле -->
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
-<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@2.0.4/dist/card-with-select.umd.js"></script>
 
 <script>
   const editor = new EditorJS({
@@ -244,7 +244,7 @@ const editor = new EditorJS({
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/paragraph@latest"></script>
-<script src="https://unpkg.com/card-with-select-tool-v1@1.0.0/dist/card-with-select.umd.js"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@2.0.4/dist/card-with-select.umd.js"></script>
 
 <script>
   const editor = new EditorJS({
