@@ -1,6 +1,5 @@
 import { make } from './utils/dom';
 import { FileHandler } from './ui/file-handler';
-import { BlockingStateManager } from './ui/blocking-state-manager';
 import { SelectManager } from './ui/select-manager';
 import { DOMRenderer } from './ui/dom-renderer';
 import { EntityManager } from './ui/entity-manager';
@@ -48,12 +47,6 @@ class Ui {
   private fileHandler: FileHandler;
 
   /**
-   * Blocking state manager instance
-   * Экземпляр менеджера состояний блокировки
-   */
-  private blockingStateManager: BlockingStateManager;
-
-  /**
    * Select manager instance
    * Экземпляр менеджера селектов
    */
@@ -87,14 +80,12 @@ class Ui {
     // Initialize managers
     // Инициализируем менеджеры
     this.fileHandler = new FileHandler(api);
-    this.blockingStateManager = new BlockingStateManager();
     this.selectManager = new SelectManager(config);
     this.domRenderer = new DOMRenderer(this.fileHandler);
     this.entityManager = new EntityManager(
       api,
       config,
       this.fileHandler,
-      this.blockingStateManager,
       this.selectManager,
       this.domRenderer
     );
@@ -182,12 +173,6 @@ class Ui {
     // Populate with data
     // Заполняем данными
     this.entityManager.populateEntity(entity, title, description, entityId, customLink, file);
-
-    // Update blocking states after initialization
-    // Обновляем состояния блокировки после инициализации
-    setTimeout((): void => {
-      this.blockingStateManager.updateBlockingStates(entity);
-    }, 100);
   }
 
   /**

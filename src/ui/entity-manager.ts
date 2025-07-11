@@ -4,7 +4,6 @@ import { IconTrash } from '@codexteam/icons';
 import type { API } from '@editorjs/editorjs';
 import type { CardWithSelectConfig } from '../types/card-with-select-config.interface';
 import type { FileHandler } from './file-handler';
-import type { BlockingStateManager } from './blocking-state-manager';
 import type { SelectManager } from './select-manager';
 import type { DOMRenderer } from './dom-renderer';
 
@@ -16,7 +15,6 @@ class EntityManager {
     private api: API;
     private config: CardWithSelectConfig;
     private fileHandler: FileHandler;
-    private blockingStateManager: BlockingStateManager;
     private selectManager: SelectManager;
     private domRenderer: DOMRenderer;
 
@@ -24,14 +22,12 @@ class EntityManager {
         api: API,
         config: CardWithSelectConfig,
         fileHandler: FileHandler,
-        blockingStateManager: BlockingStateManager,
         selectManager: SelectManager,
         domRenderer: DOMRenderer
     ) {
         this.api = api;
         this.config = config;
         this.fileHandler = fileHandler;
-        this.blockingStateManager = blockingStateManager;
         this.selectManager = selectManager;
         this.domRenderer = domRenderer;
     }
@@ -84,13 +80,8 @@ class EntityManager {
         // Custom link handler
         // Обработчик произвольной ссылки
         entity.customLink.addEventListener('input', (): void => {
-            const customLinkValue: string = (entity.customLink as HTMLInputElement).value.trim();
-
-            if (customLinkValue) {
-                this.blockingStateManager.disableSelectAndFile(entity);
-            } else {
-                this.blockingStateManager.enableSelectAndFile(entity);
-            }
+            // Custom link input handling without blocking logic
+            // Обработка ввода произвольной ссылки без логики блокировки
         });
 
         // File events
@@ -113,16 +104,15 @@ class EntityManager {
             setTimeout((): void => {
                 this.selectManager.initializeSelect(entity, null, (value: string): void => {
                     if (value && value !== '') {
-                        this.blockingStateManager.disableFileAndCustomLink(entity);
                         entity.selectClear.style.display = 'inline-block';
                     } else {
-                        this.blockingStateManager.enableFileAndCustomLink(entity);
                         entity.selectClear.style.display = 'none';
                     }
                 });
 
                 this.selectManager.setupClearButton(entity, (): void => {
-                    this.blockingStateManager.enableFileAndCustomLink(entity);
+                    // Clear button callback without blocking logic
+                    // Callback кнопки очистки без логики блокировки
                 });
             }, 0);
         }
@@ -139,11 +129,6 @@ class EntityManager {
         // File button click
         // Клик по кнопке файла
         fileButton?.addEventListener('click', (event: Event): void => {
-            if (this.blockingStateManager.isSelectOrCustomLinkFilled(entity)) {
-                event.preventDefault();
-                this.blockingStateManager.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
-                return;
-            }
             entity.fileInput.click();
         });
 
@@ -153,10 +138,6 @@ class EntityManager {
             const fileFromInput: File | undefined = (event.target as HTMLInputElement).files?.[0];
 
             if (fileFromInput) {
-                if (this.blockingStateManager.isSelectOrCustomLinkFilled(entity)) {
-                    this.blockingStateManager.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
-                    return;
-                }
                 await this.handleFileUpload(fileFromInput, entity);
             }
         });
@@ -166,11 +147,6 @@ class EntityManager {
         entity.fileZone.addEventListener('dragover', (event: DragEvent): void => {
             event.preventDefault();
             event.stopPropagation();
-
-            if (this.blockingStateManager.isSelectOrCustomLinkFilled(entity)) {
-                return;
-            }
-
             entity.fileZone.classList.add('card-with-select__item__file-zone--dragover');
         });
 
@@ -183,11 +159,6 @@ class EntityManager {
             event.preventDefault();
             event.stopPropagation();
             entity.fileZone.classList.remove('card-with-select__item__file-zone--dragover');
-
-            if (this.blockingStateManager.isSelectOrCustomLinkFilled(entity)) {
-                this.blockingStateManager.showBlockingMessage('Сначала очистите выбранную ссылку или поле произвольной ссылки');
-                return;
-            }
 
             const files: FileList | undefined = event.dataTransfer?.files;
             if (files && files.length > 0) {
@@ -229,10 +200,8 @@ class EntityManager {
                     entityObj.fileZone.style.display = 'flex';
                     entityObj.fileInfo.innerHTML = '';
                     delete entityObj.entity.dataset.fileData;
-                    this.blockingStateManager.enableSelectAndCustomLink(entityObj);
                 });
                 entityObj.entity.dataset.fileData = JSON.stringify(fileData);
-                this.blockingStateManager.disableSelectAndCustomLink(entityObj);
             },
             (entityObj: any, error: Error): void => {
                 console.error('File upload error:', error);
@@ -297,7 +266,6 @@ class EntityManager {
                 entity.fileZone.style.display = 'flex';
                 entity.fileInfo.innerHTML = '';
                 delete entity.entity.dataset.fileData;
-                this.blockingStateManager.enableSelectAndCustomLink(entity);
             });
             entity.entity.dataset.fileData = JSON.stringify(file);
         }
@@ -369,6 +337,7 @@ class EntityManager {
         if (!this.config.configurableTypes) {
             return null;
         }
+
         return this.config.configurableTypes.find(configType => configType.key === linkType);
     }
 }
