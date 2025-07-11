@@ -1,4 +1,5 @@
 import type { ActionConfig } from './action-config.interface';
+import type { ConfigurableLinkType } from './configurable-link-type.interface';
 
 /**
  * Configuration interface for CardWithSelectTool
@@ -14,6 +15,7 @@ interface CardWithSelectConfig {
     additionalRequestData?: object;
     additionalRequestHeaders?: object;
     actions?: ActionConfig[];
+    configurableTypes?: ConfigurableLinkType[];
 }
 
 export type { CardWithSelectConfig };

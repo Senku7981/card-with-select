@@ -25,22 +25,36 @@ class SelectManager {
         entityId: string | null,
         onChangeCallback: (value: string) => void
     ): Promise<void> {
+        // Get configuration for the specific link type
+        // Получаем конфигурацию для конкретного типа ссылки
+        let linkType = entity.linkType;
+        // Backward compatibility: treat 'article' as 'blog'
+        // Обратная совместимость: обрабатываем 'article' как 'blog'
+        if (linkType === 'article') {
+            linkType = 'blog';
+        }
+        
+        const linkTypeConfig = this.getConfigurableType(linkType);
+        const endpoint = linkTypeConfig?.endpoint || this.config.endpoint;
+        const endpointOne = linkTypeConfig?.endpointOne || this.config.endpointOne;
+        const searchPlaceholder = linkTypeConfig?.searchPlaceholder || 'Поиск...';
+
         entity.choices = new NativeSelect(entity.select, {
             placeholder: 'Выберите',
             searchEnabled: true,
             loadingText: 'Загрузка...',
             noResultsText: 'Ничего не найдено',
-            searchPlaceholder: 'Поиск...',
+            searchPlaceholder: searchPlaceholder,
         });
 
         // Save NativeSelect reference in DOM element for access from save()
         // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
         (entity.entity as HTMLElement & { _nativeSelectInstance?: NativeSelect })._nativeSelectInstance = entity.choices;
 
-        // Load initial articles list
-        // Загружаем начальный список статей
+        // Load initial list
+        // Загружаем начальный список
         try {
-            const response: Response = await fetch(`${this.config.endpoint}`);
+            const response: Response = await fetch(`${endpoint}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,15 +78,15 @@ class SelectManager {
                 entity.choices.renderInitialOptions();
             }
         } catch (error) {
-            console.error('Ошибка при загрузке начального списка статей:', error);
+            console.error('Ошибка при загрузке начального списка:', error);
         }
 
         // Setup search
         // Настраиваем поиск
         entity.choices.onSearch(async (query: string) => {
             try {
-                console.log('Поиск статей по запросу:', query);
-                const response: Response = await fetch(`${this.config.endpoint}?q=${encodeURIComponent(query)}`);
+                console.log('Поиск по запросу:', query);
+                const response: Response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
 
                 console.log('Статус ответа поиска:', response.status);
 
@@ -114,7 +128,7 @@ class SelectManager {
         // Load specific entity if provided
         // Загружаем конкретную сущность если предоставлена
         if (entityId !== null) {
-            const response: Response = await fetch(`${this.config.endpointOne}?id=${entityId}`);
+            const response: Response = await fetch(`${endpointOne}?id=${entityId}`);
             const data = await response.json() as EntityResponse;
 
             if (data.success) {
@@ -141,6 +155,18 @@ class SelectManager {
             onClearCallback();
             entity.selectClear.style.display = 'none';
         });
+    }
+
+    /**
+     * Get configurable type configuration
+     * Получить конфигурацию настраиваемого типа
+     * @param linkType - type key / ключ типа
+     */
+    private getConfigurableType(linkType: string) {
+        if (!this.config.configurableTypes) {
+            return null;
+        }
+        return this.config.configurableTypes.find(configType => configType.key === linkType);
     }
 }
 

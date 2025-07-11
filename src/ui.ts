@@ -116,8 +116,8 @@ class Ui {
   }
 
   /**
-   * Add new item with article type
-   * Добавить новый элемент с типом статьи
+   * Add new item with default type
+   * Добавить новый элемент с типом по умолчанию
    * @param title - description content text / текст содержимого описания
    * @param description - description content text / текст содержимого описания
    * @param entityId - description content text / текст содержимого описания
@@ -135,7 +135,7 @@ class Ui {
       size?: number;
     }
   ): void {
-    this.addNewItemWithType(title, description, entityId, 'article', customLink, file);
+    this.addNewItemWithType(title, description, entityId, 'blog', customLink, file);
   }
 
   /**
@@ -144,7 +144,7 @@ class Ui {
    * @param title - description content text / текст содержимого описания
    * @param description - description content text / текст содержимого описания
    * @param entityId - description content text / текст содержимого описания
-   * @param type - type of link: 'article', 'custom', or 'file' / тип ссылки: 'article', 'custom' или 'file'
+   * @param type - type of link: configurable type key, 'custom', or 'file' / тип ссылки: ключ настраиваемого типа, 'custom' или 'file'
    * @param customLink - custom link URL / URL произвольной ссылки
    * @param file - attached file data / данные прикрепленного файла
    */
@@ -152,7 +152,7 @@ class Ui {
     title: string,
     description: string,
     entityId: string | null,
-    type: 'article' | 'custom' | 'file',
+    type: string,
     customLink?: string,
     file?: {
       url: string;

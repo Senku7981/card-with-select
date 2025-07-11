@@ -41,7 +41,7 @@ class EntityManager {
      * Создать объект сущности
      * @param linkType - type of link / тип ссылки
      */
-    public createEntity(linkType: 'article' | 'custom' | 'file'): any {
+    public createEntity(linkType: string): any {
         const CSS = this.getCSSClasses();
 
         return {
@@ -107,9 +107,9 @@ class EntityManager {
         // Предотвращение drag and drop
         this.setupDragAndDropPrevention(entity);
 
-        // Initialize select for article type
-        // Инициализация select для типа статьи
-        if (entity.linkType === 'article') {
+        // Initialize select for configurable types
+        // Инициализация select для настраиваемых типов
+        if (this.isConfigurableType(entity.linkType)) {
             setTimeout((): void => {
                 this.selectManager.initializeSelect(entity, null, (value: string): void => {
                     if (value && value !== '') {
@@ -322,7 +322,7 @@ class EntityManager {
 
         // Add elements based on link type
         // Добавляем элементы в зависимости от типа ссылки
-        if (entity.linkType === 'article') {
+        if (this.isConfigurableType(entity.linkType)) {
             newEntity.appendChild(entity.select);
             newEntity.appendChild(entity.selectClear);
         } else if (entity.linkType === 'custom') {
@@ -334,6 +334,42 @@ class EntityManager {
         }
 
         return newEntity;
+    }
+
+    /**
+     * Check if link type is a configurable type
+     * Проверяет, является ли тип ссылки настраиваемым типом
+     * @param linkType - type to check / тип для проверки
+     */
+    private isConfigurableType(linkType: string): boolean {
+        // Backward compatibility: treat 'article' as 'blog'
+        // Обратная совместимость: обрабатываем 'article' как 'blog'
+        if (linkType === 'article') {
+            return true;
+        }
+        
+        if (!this.config.configurableTypes) {
+            return false;
+        }
+        return this.config.configurableTypes.some(configType => configType.key === linkType);
+    }
+
+    /**
+     * Get configurable type configuration
+     * Получить конфигурацию настраиваемого типа
+     * @param linkType - type key / ключ типа
+     */
+    private getConfigurableType(linkType: string) {
+        // Backward compatibility: treat 'article' as 'blog'
+        // Обратная совместимость: обрабатываем 'article' как 'blog'
+        if (linkType === 'article') {
+            linkType = 'blog';
+        }
+        
+        if (!this.config.configurableTypes) {
+            return null;
+        }
+        return this.config.configurableTypes.find(configType => configType.key === linkType);
     }
 }
 

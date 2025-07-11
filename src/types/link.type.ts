@@ -2,6 +2,6 @@
  * Type for link types
  * Тип для типов ссылок
  */
-type LinkType = 'article' | 'custom' | 'file';
+type LinkType = string | 'custom' | 'file';
 
 export type { LinkType };

@@ -84,20 +84,31 @@ class CardWithSelectTool implements BlockTool {
   constructor({ data, config, api, block }: TermToolConstructorOptions) {
     this.api = api;
     this.block = block;
-    /**
-     * Tool's initial config
-     * Начальная конфигурация Tool
-     */
-    this.config = {
-      endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
-      endpointOne: config?.endpointOne ?? '/blog/ajax-blog-by-id?id=1',
-      maxEntityQuantity: config?.maxEntityQuantity ?? CardWithSelectTool.DEFAULT_MAX_ENTITY_QUANTITY,
-      additionalRequestData: config?.additionalRequestData,
-      additionalRequestHeaders: config?.additionalRequestHeaders,
-      types: config?.types,
-      titlePlaceholder: this.api.i18n.t(config?.titlePlaceholder ?? 'Title'),
-      descriptionPlaceholder: this.api.i18n.t(config?.descriptionPlaceholder ?? 'Description'),
-      actions: config?.actions,
+  /**
+   * Tool's initial config
+   * Начальная конфигурация Tool
+   */
+  this.config = {
+    endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
+    endpointOne: config?.endpointOne ?? '/blog/ajax-blog-by-id?id=1',
+    maxEntityQuantity: config?.maxEntityQuantity ?? CardWithSelectTool.DEFAULT_MAX_ENTITY_QUANTITY,
+    additionalRequestData: config?.additionalRequestData,
+    additionalRequestHeaders: config?.additionalRequestHeaders,
+    types: config?.types,
+    titlePlaceholder: this.api.i18n.t(config?.titlePlaceholder ?? 'Title'),
+    descriptionPlaceholder: this.api.i18n.t(config?.descriptionPlaceholder ?? 'Description'),
+    actions: config?.actions,
+    configurableTypes: config?.configurableTypes ?? [
+      {
+        key: 'blog',
+        buttonLabel: 'Добавить ссылку на статью в блог',
+        endpoint: '/blog/ajax-blog-list',
+        endpointOne: '/blog/ajax-blog-by-id',
+        searchPlaceholder: 'Поиск статей...',
+        color: '#007acc',
+        icon: '📄'
+      },
+    ],
     };
 
     /**
@@ -165,7 +176,7 @@ class CardWithSelectTool implements BlockTool {
       const selectElement = entity.querySelector('select');
       const customLinkInput = entity.querySelector('.card-with-select__item__custom-link') as HTMLInputElement;
       const fileDataStr = (entity as HTMLElement).dataset.fileData;
-      const linkType = (entity as HTMLElement).dataset.linkType as 'article' | 'custom' | 'file';
+      const linkType = (entity as HTMLElement).dataset.linkType as string;
 
       let fileData: {
         url: string;
@@ -205,7 +216,7 @@ class CardWithSelectTool implements BlockTool {
           entityId: entityId,
           customLink: customLinkInput?.value || undefined,
           file: fileData || undefined,
-          linkType: linkType || 'article',
+          linkType: linkType || 'blog',
         });
       }
     });
@@ -219,29 +230,42 @@ class CardWithSelectTool implements BlockTool {
    * @returns MenuConfig
    */
   public renderSettings(): MenuConfig {
-    return [
+    const menuItems: MenuConfig = [];
+
+    // Add configurable types
+    // Добавляем настраиваемые типы
+    if (this.config.configurableTypes) {
+      this.config.configurableTypes.forEach((linkType) => {
+        menuItems.push({
+          icon: IconPlus,
+          label: this.api.i18n.t(linkType.buttonLabel),
+          onActivate: (): void => this.addNewItemWithType(linkType.key),
+          closeOnActivate: true,
+          isActive: false,
+        });
+      });
+    }
+
+    // Add default types
+    // Добавляем типы по умолчанию
+    menuItems.push(
       {
         icon: IconPlus,
-        label: this.api.i18n.t('Добавить ссылку на статью'),
-        onActivate: (): void => this.addNewItemWithType('article'),
-        closeOnActivate: true,
-        isActive: false,
-      },
-      {
-        icon: IconPlus,
-        label: this.api.i18n.t('Добавить произвольную ссылку'),
+        label: 'Произвольную ссылку',
         onActivate: (): void => this.addNewItemWithType('custom'),
         closeOnActivate: true,
         isActive: false,
       },
       {
         icon: IconPlus,
-        label: this.api.i18n.t('Добавить файл'),
+        label: 'Файл',
         onActivate: (): void => this.addNewItemWithType('file'),
         closeOnActivate: true,
         isActive: false,
-      },
-    ];
+      }
+    );
+
+    return menuItems;
   }
 
   /**
@@ -249,7 +273,7 @@ class CardWithSelectTool implements BlockTool {
    * Добавить новый элемент с указанным типом
    * @param type - type of the item / тип элемента
    */
-  protected addNewItemWithType(type: 'article' | 'custom' | 'file'): void {
+  protected addNewItemWithType(type: string): void {
     this.ui.addNewItemWithType('', '', null, type);
   }
 
@@ -287,27 +311,35 @@ class CardWithSelectTool implements BlockTool {
    */
   private set data(data: CardWithSelectToolData) {
     if (!data || !data.hasOwnProperty('items')) {
-      this.ui.addNewItemWithType('', '', null, 'article');
+      this.ui.addNewItemWithType('', '', null, 'blog');
       return;
     }
     
     data.items.forEach((item: EntityType): void => {
       // Backward compatibility: ensure all fields are defined
       // Обратная совместимость: убеждаемся что все поля определены
+      let linkType = item.linkType || 'blog';
+      
+      // Convert old 'article' type to 'blog' for backward compatibility
+      // Преобразуем старый тип 'article' в 'blog' для обратной совместимости
+      if (linkType === 'article') {
+        linkType = 'blog';
+      }
+
       const safeItem: EntityType = {
         title: item.title || '',
         description: item.description || '',
         entityId: item.entityId || '',
         customLink: item.customLink || undefined,
         file: item.file || undefined,
-        linkType: item.linkType || 'article',
+        linkType: linkType,
       };
 
       this.ui.addNewItemWithType(
         safeItem.title,
         safeItem.description,
         String(safeItem.entityId),
-        (safeItem.linkType as 'article' | 'custom' | 'file') || 'article',
+        linkType,
         safeItem.customLink,
         safeItem.file
       );

@@ -461,8 +461,12 @@
     color: white !important;
 }
 
-.card-with-select__item[data-link-type="article"] {
-    border-left: 4px solid #6788F3;
+.card-with-select__item[data-link-type="blog"] {
+    border-left: 4px solid #007acc;
+}
+
+.card-with-select__item[data-link-type="glossary"] {
+    border-left: 4px solid #8e44ad;
 }
 
 .card-with-select__item[data-link-type="custom"] {
@@ -473,8 +477,32 @@
     border-left: 4px solid #F39C12;
 }
 
+/* Backward compatibility for old 'article' type */
+/* Обратная совместимость для старого типа 'article' */
+.card-with-select__item[data-link-type="article"] {
+    border-left: 4px solid #007acc;
+}
+
 .card-with-select__item[data-link-type="article"]::before {
     content: "📄";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.card-with-select__item[data-link-type="blog"]::before {
+    content: "📄";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.card-with-select__item[data-link-type="glossary"]::before {
+    content: "�";
     position: absolute;
     top: 8px;
     right: 8px;
