@@ -39,8 +39,6 @@ npm install card-with-select-tool
 composer require npm-asset/card-with-select-tool
 ````
 
-> **Примечание:** Для работы с npm-asset пакетами необходимо добавить asset-packagist.org в репозитории composer.json:
-
 ```json
 {
   "repositories": [
