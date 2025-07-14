@@ -1,10 +1,9 @@
 /**
  * Helper for making Elements with attributes
- * Помощник для создания элементов с атрибутами
- * @param tagName - new Element tag name / имя тега нового элемента
- * @param classNames - list or name of CSS class / список или имя CSS класса
- * @param attributes - any attributes / любые атрибуты
- * @returns HTMLElement / возвращает HTML элемент
+ * @param tagName - new Element tag name
+ * @param classNames - list or name of CSS class
+ * @param attributes - any attributes
+ * @returns HTMLElement
  */
 function make(tagName: string, classNames: string[] | string | null = null, attributes: { [key: string]: string | boolean } = {}): HTMLElement {
   const element: HTMLElement = document.createElement(tagName);

@@ -2,88 +2,27 @@ import { make } from './dom';
 import type { NativeSelectOption } from '../types/native-select-option.interface';
 import type { NativeSelectConfig } from '../types/native-select-config.interface';
 
-/**
- * Native custom select with search functionality
- * Нативный кастомный select с функцией поиска
- */
+
 class NativeSelect {
-    /**
-     * Original select element
-     * Оригинальный select элемент
-     */
     private selectElement: HTMLSelectElement;
-
-    /**
-     * Container for the custom select
-     * Контейнер для кастомного select
-     */
     private container!: HTMLElement;
-
-    /**
-     * Input element for search
-     * Элемент input для поиска
-     */
     private input!: HTMLInputElement;
-
-    /**
-     * Dropdown container
-     * Контейнер dropdown
-     */
     private dropdown!: HTMLElement;
-
-    /**
-     * Options list container
-     * Контейнер списка опций
-     */
     private optionsList!: HTMLElement;
-
-    /**
-     * Configuration object
-     * Объект конфигурации
-     */
     private config: NativeSelectConfig;
-
-    /**
-     * Available options
-     * Доступные опции
-     */
     private options: NativeSelectOption[] = [];
-
-    /**
-     * Open state flag
-     * Флаг состояния открытия
-     */
     private isOpen: boolean = false;
-
-    /**
-     * Search timer for debouncing
-     * Таймер поиска для debouncing
-     */
     private searchTimer: number = 0;
-
-    /**
-     * Currently selected value
-     * Текущее выбранное значение
-     */
     private selectedValue: string = '';
 
-    /**
-     * Change callback function
-     * Функция колбэка изменения
-     */
     private onChangeCallback?: (value: string) => void;
 
-    /**
-     * Search callback function
-     * Функция колбэка поиска
-     */
     private onSearchCallback?: (query: string) => Promise<NativeSelectOption[]>;
 
     /**
      * Constructor for NativeSelect
-     * Конструктор для NativeSelect
-     * @param selectElement - original select element / оригинальный элемент select
-     * @param config - configuration object / объект конфигурации
+     * @param selectElement - original select element
+     * @param config - configuration object
      */
     constructor(selectElement: HTMLSelectElement, config: NativeSelectConfig = {}) {
         this.selectElement = selectElement;
@@ -99,27 +38,15 @@ class NativeSelect {
         this.init();
     }
 
-    /**
-     * Initialize the native select component
-     * Инициализировать компонент нативного select
-     */
     private init(): void {
         this.createStructure();
         this.attachEvents();
         this.hideOriginalSelect();
     }
 
-    /**
-     * Create the DOM structure for the native select
-     * Создать DOM структуру для нативного select
-     */
     private createStructure(): void {
-        // Create container
-        // Создаем контейнер
         this.container = make('div', ['native-select-container']);
 
-        // Create input field
-        // Создаем поле ввода
         this.input = make('input', ['native-select-input'], {
             type: 'text',
             placeholder: this.config.placeholder!,
@@ -127,41 +54,25 @@ class NativeSelect {
             readonly: !this.config.searchEnabled,
         }) as HTMLInputElement;
 
-        // Create arrow element
-        // Создаем элемент стрелки
         const arrow: HTMLElement = make('div', ['native-select-arrow']);
         arrow.innerHTML = '▼';
 
-        // Create dropdown container
-        // Создаем контейнер dropdown
         this.dropdown = make('div', ['native-select-dropdown']);
         this.optionsList = make('div', ['native-select-options']);
 
         this.dropdown.appendChild(this.optionsList);
 
-        // Assemble the structure
-        // Собираем структуру
         this.container.appendChild(this.input);
         this.container.appendChild(arrow);
         this.container.appendChild(this.dropdown);
 
-        // Replace original select with new structure
-        // Заменяем оригинальный select новой структурой
         this.selectElement.parentNode?.insertBefore(this.container, this.selectElement);
     }
 
-    /**
-     * Attach event listeners to the native select elements
-     * Прикрепить обработчики событий к элементам нативного select
-     */
     private attachEvents(): void {
-        // Click on input or arrow
-        // Клик по input или стрелке
         this.input.addEventListener('click', (): void => this.toggle());
         this.container.querySelector('.native-select-arrow')?.addEventListener('click', (): void => this.toggle());
 
-        // Search functionality
-        // Функциональность поиска
         if (this.config.searchEnabled) {
             this.input.addEventListener('input', (event: Event): void => {
                 const query: string = (event.target as HTMLInputElement).value;
@@ -169,16 +80,12 @@ class NativeSelect {
             });
         }
 
-        // Outside click handler
-        // Обработчик клика вне элемента
         document.addEventListener('click', (event: Event): void => {
             if (!this.container.contains(event.target as Node)) {
                 this.close();
             }
         });
 
-        // Keyboard navigation
-        // Навигация с клавиатуры
         this.input.addEventListener('keydown', (event: KeyboardEvent): void => {
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
@@ -190,18 +97,10 @@ class NativeSelect {
         });
     }
 
-    /**
-     * Hide original select element
-     * Скрыть оригинальный элемент select
-     */
     private hideOriginalSelect(): void {
         this.selectElement.style.display = 'none';
     }
 
-    /**
-     * Toggle dropdown state
-     * Переключить состояние dropdown
-     */
     private toggle(): void {
         if (this.isOpen) {
             this.close();
@@ -210,10 +109,6 @@ class NativeSelect {
         }
     }
 
-    /**
-     * Open dropdown
-     * Открыть dropdown
-     */
     private open(): void {
         if (this.isOpen) {
             return;
@@ -227,10 +122,6 @@ class NativeSelect {
         }
     }
 
-    /**
-     * Close dropdown
-     * Закрыть dropdown
-     */
     private close(): void {
         if (!this.isOpen) {
             return;
@@ -242,8 +133,7 @@ class NativeSelect {
 
     /**
      * Handle search input
-     * Обработать поисковый ввод
-     * @param query - search query / поисковый запрос
+     * @param query - search query 
      */
     private handleSearch(query: string): void {
         if (this.searchTimer) {
@@ -269,7 +159,6 @@ class NativeSelect {
                     });
             } else {
                 // Local search
-                // Локальный поиск
                 const filtered: NativeSelectOption[] = this.options.filter((option: NativeSelectOption): boolean =>
                     option.text.toLowerCase().includes(query.toLowerCase())
                 );
@@ -278,34 +167,21 @@ class NativeSelect {
         }, 300);
     }
 
-    /**
-     * Show loading state
-     * Показать состояние загрузки
-     */
     private showLoading(): void {
         this.optionsList.innerHTML = `<div class="native-select-loading">${this.config.loadingText}</div>`;
     }
 
-    /**
-     * Show error state
-     * Показать состояние ошибки
-     */
     private showError(): void {
         this.optionsList.innerHTML = `<div class="native-select-error">Ошибка загрузки</div>`;
     }
 
-    /**
-     * Show all available options
-     * Показать все доступные опции
-     */
     private showAllOptions(): void {
         this.renderOptions();
     }
 
     /**
      * Render options in dropdown
-     * Отобразить опции в dropdown
-     * @param optionsToRender - options to render / опции для отображения
+     * @param optionsToRender - options to render 
      */
     private renderOptions(optionsToRender?: NativeSelectOption[]): void {
         const options: NativeSelectOption[] = optionsToRender || this.options;
@@ -338,16 +214,13 @@ class NativeSelect {
 
     /**
      * Select an option
-     * Выбрать опцию
-     * @param option - option to select / опция для выбора
+     * @param option - option to select
      */
     private selectOption(option: NativeSelectOption): void {
         this.selectedValue = option.id;
         this.input.value = option.text;
         this.selectElement.value = option.id;
 
-        // Update visual state
-        // Обновляем визуальное состояние
         this.optionsList.querySelectorAll('.native-select-option').forEach((element: Element): void => {
             element.classList.remove('native-select-option-selected');
         });
@@ -364,15 +237,9 @@ class NativeSelect {
             this.onChangeCallback(option.id);
         }
 
-        // Dispatch change event
-        // Отправляем событие изменения
         this.selectElement.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    /**
-     * Focus first option
-     * Сфокусировать первую опцию
-     */
     private focusFirstOption(): void {
         const firstOption: HTMLElement | null = this.optionsList.querySelector('.native-select-option') as HTMLElement;
 
@@ -383,8 +250,7 @@ class NativeSelect {
 
     /**
      * Set options for the select
-     * Установить опции для select
-     * @param options - array of options / массив опций
+     * @param options - array of options
      */
     public setOptions(options: NativeSelectOption[]): void {
         this.options = options;
@@ -402,9 +268,7 @@ class NativeSelect {
     }
 
     /**
-     * Set selected value
-     * Установить выбранное значение
-     * @param value - value to set / значение для установки
+     * @param value - value to set
      */
     public setValue(value: string): void {
         const option: NativeSelectOption | undefined = this.options.find((optionItem: NativeSelectOption): boolean => optionItem.id === value);
@@ -437,7 +301,6 @@ class NativeSelect {
 
     /**
      * Enable the select
-     * Включить select
      */
     public enable(): void {
         this.input.disabled = false;
@@ -446,8 +309,7 @@ class NativeSelect {
 
     /**
      * Set search callback
-     * Установить колбэк поиска
-     * @param callback - search callback function / функция колбэка поиска
+     * @param callback - search callback function
      */
     public onSearch(callback: (query: string) => Promise<NativeSelectOption[]>): void {
         this.onSearchCallback = callback;
@@ -455,8 +317,7 @@ class NativeSelect {
 
     /**
      * Set change callback
-     * Установить колбэк изменения
-     * @param callback - change callback function / функция колбэка изменения
+     * @param callback - change callback function
      */
     public onChange(callback: (value: string) => void): void {
         this.onChangeCallback = callback;
