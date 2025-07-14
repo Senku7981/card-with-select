@@ -7,11 +7,7 @@ interface EntityType {
     description: string;
     entityId: number | string;
     customLink?: string;
-    file?: {
-        url: string;
-        name: string;
-        size?: number;
-    };
+    file?: FileInterface;
     linkType?: LinkType;
 }
 

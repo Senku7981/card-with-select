@@ -1,6 +1,7 @@
 interface FileInterface {
-      file?: {
         url: string;
         name: string;
         size?: number;
 }
+
+export type { FileInterface };
