@@ -1,7 +1,3 @@
-/**
- * Interface for NativeSelect configuration
- * Интерфейс для конфигурации NativeSelect
- */
 interface NativeSelectConfig {
     placeholder?: string;
     searchEnabled?: boolean;

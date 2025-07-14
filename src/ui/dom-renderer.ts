@@ -4,7 +4,6 @@ import type { FileHandler } from './file-handler';
 
 /**
  * Renderer for DOM elements
- * Рендерер DOM элементов
  */
 class DOMRenderer {
     private fileHandler: FileHandler;
@@ -15,7 +14,6 @@ class DOMRenderer {
 
     /**
      * Render file zone
-     * Рендерить зону файлов
      */
     public renderFileZone(): HTMLElement {
         const fileZone: HTMLElement = make('div', ['card-with-select__item__file-zone'], {});
@@ -30,9 +28,8 @@ class DOMRenderer {
 
     /**
      * Show file upload progress
-     * Показать прогресс загрузки файла
-     * @param entity - entity object / объект сущности
-     * @param file - file being uploaded / загружаемый файл
+     * @param entity - entity object
+     * @param file - file being uploaded
      */
     public showFileUploadProgress(entity: any, file: File): void {
         const fileIcon: string = this.fileHandler.getFileIcon(file.name);
@@ -75,10 +72,9 @@ class DOMRenderer {
 
     /**
      * Display file information
-     * Отобразить информацию о файле
-     * @param entity - entity object / объект сущности
-     * @param fileData - file data / данные файла
-     * @param onFileReplace - callback when file is replaced / колбэк при замене файла
+     * @param entity - entity object
+     * @param fileData - file data
+     * @param onFileReplace - callback when file is replaced
      */
     public displayFileInfo(
         entity: any,
@@ -116,7 +112,6 @@ class DOMRenderer {
         box-sizing: border-box;
         margin-bottom: 12px;
       ">
-        <!-- Основная информация о файле -->
         <div style="
           display: flex; 
           align-items: center; 
@@ -234,9 +229,8 @@ class DOMRenderer {
 
     /**
      * Setup events for file info elements
-     * Настроить события для элементов информации о файле
-     * @param entity - entity object / объект сущности
-     * @param onFileReplace - callback when file is replaced / колбэк при замене файла
+     * @param entity - entity object
+     * @param onFileReplace - callback when file is replaced
      */
     private setupFileInfoEvents(entity: any, onFileReplace: () => void): void {
         const changeButton: Element | null = entity.fileInfo.querySelector('.card-with-select__item__change-file');

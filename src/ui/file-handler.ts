@@ -2,7 +2,6 @@ import type { API } from '@editorjs/editorjs';
 
 /**
  * Handler for file operations
- * Обработчик файловых операций
  */
 class FileHandler {
     private api: API;
@@ -13,12 +12,11 @@ class FileHandler {
 
     /**
      * Handle file upload
-     * Обработка загрузки файла
-     * @param file - file to upload / файл для загрузки
-     * @param entity - entity object / объект сущности
-     * @param onProgress - progress callback / колбэк прогресса
-     * @param onSuccess - success callback / колбэк успеха
-     * @param onError - error callback / колбэк ошибки
+     * @param file - file to upload
+     * @param entity - entity object
+     * @param onProgress - progress callback
+     * @param onSuccess - success callback
+     * @param onError - error callback
      */
     public async handleFileUpload(
         file: File,
@@ -46,9 +44,8 @@ class FileHandler {
 
     /**
      * Upload file to server
-     * Загрузить файл на сервер
-     * @param file - file to upload / файл для загрузки
-     * @returns Promise with file data / Promise с данными файла
+     * @param file - file to upload 
+     * @returns Promise with file data 
      */
     private async uploadFileToServer(file: File): Promise<{
         url: string;
@@ -88,7 +85,6 @@ class FileHandler {
 
     /**
      * Get CSRF token for requests
-     * Получить CSRF токен для запросов
      */
     private getCSRFToken(): string {
         const csrfMeta: HTMLMetaElement | null = document.querySelector('meta[name="csrf-token"]');
@@ -105,9 +101,7 @@ class FileHandler {
     }
 
     /**
-     * Format file size
-     * Форматировать размер файла
-     * @param bytes - size in bytes / размер в байтах
+     * @param bytes
      */
     public formatFileSize(bytes: number): string {
         if (bytes === 0) {
@@ -123,8 +117,7 @@ class FileHandler {
 
     /**
      * Get file icon by filename
-     * Получить иконку файла по имени
-     * @param fileName - name of the file / имя файла
+     * @param fileName 
      */
     public getFileIcon(fileName: string): string {
         const extension: string | undefined = fileName.split('.').pop()?.toLowerCase();
@@ -146,11 +139,6 @@ class FileHandler {
             png: '🖼️',
             gif: '🖼️',
             svg: '🖼️',
-            mp3: '🎵',
-            wav: '🎵',
-            mp4: '🎬',
-            avi: '🎬',
-            mov: '🎬',
         };
 
         return iconMap[extension || ''] || '📎';
@@ -158,8 +146,7 @@ class FileHandler {
 
     /**
      * Get file extension
-     * Получить расширение файла
-     * @param fileName - name of the file / имя файла
+     * @param fileName - name of the file
      */
     public getFileExtension(fileName: string): string {
         const parts: string[] = fileName.split('.');

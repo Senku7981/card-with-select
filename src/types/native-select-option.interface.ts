@@ -1,7 +1,3 @@
-/**
- * Interface for NativeSelect option configuration
- * Интерфейс для конфигурации опции NativeSelect
- */
 interface NativeSelectOption {
     id: string;
     text: string;

@@ -1,9 +1,7 @@
 import type { LinkType } from './link.type';
+import type { FileInterface } from './file.interface';
 
-/**
- * Interface for entity type
- * Интерфейс для типа сущности
- */
+
 interface EntityType {
     title: string;
     description: string;

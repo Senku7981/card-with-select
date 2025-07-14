@@ -221,12 +221,7 @@ class NativeSelect {
 
         this.isOpen = true;
         this.container.classList.add('native-select-open');
-        // Don't set display: block directly, use CSS classes
-        // Не устанавливаем display: block напрямую, используем CSS классы
-        // this.dropdown.style.display = 'block';
 
-        // If search is enabled and field is empty, show all options
-        // Если поиск включен и поле пустое, показываем все опции
         if (this.config.searchEnabled && this.input.value === '') {
             this.showAllOptions();
         }
@@ -243,9 +238,6 @@ class NativeSelect {
 
         this.isOpen = false;
         this.container.classList.remove('native-select-open');
-        // Don't set display: none directly, use CSS classes
-        // Не устанавливаем display: none напрямую, используем CSS классы
-        // this.dropdown.style.display = 'none';
     }
 
     /**
@@ -368,8 +360,6 @@ class NativeSelect {
 
         this.close();
 
-        // Call callback
-        // Вызываем колбэк
         if (this.onChangeCallback) {
             this.onChangeCallback(option.id);
         }
@@ -400,20 +390,13 @@ class NativeSelect {
         this.options = options;
     }
 
-    /**
-     * Render initial options
-     * Отобразить начальные опции
-     */
     public renderInitialOptions(): void {
         if (this.options.length > 0) {
             this.renderOptions();
         }
     }
 
-    /**
-     * Get current selected value
-     * Получить текущее выбранное значение
-     */
+
     public getValue(): string {
         return this.selectedValue;
     }
@@ -431,10 +414,7 @@ class NativeSelect {
         }
     }
 
-    /**
-     * Clear selected value
-     * Очистить выбранное значение
-     */
+    
     public clear(): void {
         this.selectedValue = '';
         this.input.value = '';
@@ -449,10 +429,7 @@ class NativeSelect {
         }
     }
 
-    /**
-     * Disable the select
-     * Отключить select
-     */
+    
     public disable(): void {
         this.input.disabled = true;
         this.container.classList.add('native-select-disabled');
@@ -485,10 +462,6 @@ class NativeSelect {
         this.onChangeCallback = callback;
     }
 
-    /**
-     * Destroy the native select instance
-     * Уничтожить экземпляр нативного select
-     */
     public destroy(): void {
         this.container.remove();
         this.selectElement.style.display = '';

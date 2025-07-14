@@ -1,10 +1,6 @@
 import type { ActionConfig } from './action-config.interface';
 import type { ConfigurableLinkType } from './configurable-link-type.interface';
 
-/**
- * Configuration interface for CardWithSelectTool
- * Интерфейс конфигурации для CardWithSelectTool
- */
 interface CardWithSelectConfig {
     endpointOne?: string;
     maxEntityQuantity?: number;

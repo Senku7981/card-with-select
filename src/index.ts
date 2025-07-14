@@ -101,7 +101,7 @@ class CardWithSelectTool implements BlockTool {
     configurableTypes: config?.configurableTypes ?? [
       {
         key: 'blog',
-        buttonLabel: 'Добавить ссылку на статью в блог',
+        buttonLabel: 'Статья блога',
         endpoint: '/blog/ajax-blog-list',
         endpointOne: '/blog/ajax-blog-by-id',
         searchPlaceholder: 'Поиск статей...',
@@ -251,7 +251,7 @@ class CardWithSelectTool implements BlockTool {
     menuItems.push(
       {
         icon: IconPlus,
-        label: 'Произвольную ссылку',
+        label: 'Ссылку',
         onActivate: (): void => this.addNewItemWithType('custom'),
         closeOnActivate: true,
         isActive: false,
@@ -277,27 +277,6 @@ class CardWithSelectTool implements BlockTool {
     this.ui.addNewItemWithType('', '', null, type);
   }
 
-  /**
-   * Specify paste substitutes
-   * Определить заменители для вставки
-   * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
-   */
-  public static get pasteConfig(): PasteConfig {
-    return {
-    };
-  }
-
-  /**
-   * Specify paste handlers
-   * Определить обработчики вставки
-   * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
-   * @param event - editor.js custom paste event / пользовательское событие вставки editor.js
-   *                              {@link https://github.com/codex-team/editor.js/blob/master/types/tools/paste-events.d.ts}
-   */
-  public onPaste(event: PasteEvent): void {
-    switch (event.type) {
-    }
-  }
 
   /**
    * Private methods

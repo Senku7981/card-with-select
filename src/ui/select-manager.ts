@@ -4,7 +4,6 @@ import type { EntityResponse } from '../types/entity-response.interface';
 
 /**
  * Manager for select elements
- * Менеджер элементов select
  */
 class SelectManager {
     private config: CardWithSelectConfig;
@@ -15,21 +14,17 @@ class SelectManager {
 
     /**
      * Initialize select for entity
-     * Инициализировать select для сущности
-     * @param entity - entity object / объект сущности
-     * @param entityId - entity ID / ID сущности
-     * @param onChangeCallback - callback on change / колбэк при изменении
+     * @param entity - entity object
+     * @param entityId - entity ID
+     * @param onChangeCallback - callback on change
      */
     public async initializeSelect(
         entity: any,
         entityId: string | null,
         onChangeCallback: (value: string) => void
     ): Promise<void> {
-        // Get configuration for the specific link type
-        // Получаем конфигурацию для конкретного типа ссылки
         let linkType = entity.linkType;
-        // Backward compatibility: treat 'article' as 'blog'
-        // Обратная совместимость: обрабатываем 'article' как 'blog'
+
         if (linkType === 'article') {
             linkType = 'blog';
         }
@@ -48,11 +43,9 @@ class SelectManager {
         });
 
         // Save NativeSelect reference in DOM element for access from save()
-        // Сохраняем ссылку на NativeSelect в DOM элементе для доступа из save()
         (entity.entity as HTMLElement & { _nativeSelectInstance?: NativeSelect })._nativeSelectInstance = entity.choices;
 
         // Load initial list
-        // Загружаем начальный список
         try {
             const response: Response = await fetch(`${endpoint}`);
 
@@ -82,7 +75,6 @@ class SelectManager {
         }
 
         // Setup search
-        // Настраиваем поиск
         entity.choices.onSearch(async (query: string) => {
             try {
                 console.log('Поиск по запросу:', query);
@@ -122,11 +114,9 @@ class SelectManager {
         });
 
         // Setup change handler
-        // Настраиваем обработчик изменений
         entity.choices.onChange(onChangeCallback);
 
         // Load specific entity if provided
-        // Загружаем конкретную сущность если предоставлена
         if (entityId !== null) {
             const response: Response = await fetch(`${endpointOne}?id=${entityId}`);
             const data = await response.json() as EntityResponse;
@@ -144,9 +134,8 @@ class SelectManager {
 
     /**
      * Setup clear button for select
-     * Настроить кнопку очистки для select
-     * @param entity - entity object / объект сущности
-     * @param onClearCallback - callback on clear / колбэк при очистке
+     * @param entity - entity object
+     * @param onClearCallback - callback on clear
      */
     public setupClearButton(entity: any, onClearCallback: () => void): void {
         entity.selectClear.addEventListener('click', (event: Event): void => {
@@ -159,13 +148,13 @@ class SelectManager {
 
     /**
      * Get configurable type configuration
-     * Получить конфигурацию настраиваемого типа
-     * @param linkType - type key / ключ типа
+     * @param linkType - type key
      */
     private getConfigurableType(linkType: string) {
         if (!this.config.configurableTypes) {
             return null;
         }
+
         return this.config.configurableTypes.find(configType => configType.key === linkType);
     }
 }

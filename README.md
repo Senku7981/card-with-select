@@ -23,31 +23,10 @@
 
 ## Установка
 
-### Через npm/yarn
+### Через npm
 
 ```bash
 npm install card-with-select-tool
-```
-
-или
-
-````
-
-### Через Composer (для Yii2 и других PHP проектов)
-
-```bash
-composer require npm-asset/card-with-select-tool
-````
-
-```json
-{
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://asset-packagist.org"
-    }
-  ]
-}
 ```
 
 ## Использование

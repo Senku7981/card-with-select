@@ -9,7 +9,6 @@ import type { DOMRenderer } from './dom-renderer';
 
 /**
  * Manager for entity operations
- * Менеджер операций с сущностями
  */
 class EntityManager {
     private api: API;
@@ -34,8 +33,7 @@ class EntityManager {
 
     /**
      * Create entity object
-     * Создать объект сущности
-     * @param linkType - type of link / тип ссылки
+     * @param linkType - type of link
      */
     public createEntity(linkType: string): any {
         const CSS = this.getCSSClasses();
@@ -44,24 +42,31 @@ class EntityManager {
             title: make('div', [CSS.textInput, CSS.input, CSS.titleInput], {
                 contentEditable: true,
             }),
+
             description: make('div', [CSS.textInput, CSS.descriptionInput, CSS.input], {
                 contentEditable: true,
             }),
+
             select: make('select', [CSS.textInput, CSS.input], {}) as HTMLSelectElement,
+
             selectClear: make('button', ['card-with-select__item__clear-button'], {
                 type: 'button',
                 title: 'Очистить выбор',
                 innerHTML: '×',
             }),
+
             customLink: make('input', [CSS.textInput, CSS.input, 'card-with-select__item__custom-link'], {
                 type: 'url',
-                placeholder: 'Введите произвольную ссылку',
+                placeholder: 'Ссылка',
             }),
+
             fileZone: this.domRenderer.renderFileZone(),
+
             fileInput: make('input', [], {
                 type: 'file',
                 style: 'display: none',
             }),
+
             fileInfo: make('div', ['card-with-select__item__file-info'], {}),
             entity: make('div', ['card-with-select__item'], {}),
             remove: make('div', ['card-with-select__item__remove'], {}),
@@ -72,34 +77,16 @@ class EntityManager {
 
     /**
      * Setup entity events
-     * Настроить события сущности
-     * @param entity - entity object / объект сущности
-     * @param parentElement - parent element / родительский элемент
+     * @param entity - entity object
+     * @param parentElement - parent element
      */
     public setupEntityEvents(entity: any, parentElement: HTMLElement): void {
-        // Custom link handler
-        // Обработчик произвольной ссылки
-        entity.customLink.addEventListener('input', (): void => {
-            // Custom link input handling without blocking logic
-            // Обработка ввода произвольной ссылки без логики блокировки
-        });
-
-        // File events
-        // События файлов
         this.setupFileEvents(entity);
 
-        // Remove button
-        // Кнопка удаления
         entity.remove.addEventListener('click', (): void => {
             entity.remove.closest('.card-with-select__item')?.remove();
         });
 
-        // Drag and drop prevention
-        // Предотвращение drag and drop
-        this.setupDragAndDropPrevention(entity);
-
-        // Initialize select for configurable types
-        // Инициализация select для настраиваемых типов
         if (this.isConfigurableType(entity.linkType)) {
             setTimeout((): void => {
                 this.selectManager.initializeSelect(entity, null, (value: string): void => {
@@ -109,31 +96,21 @@ class EntityManager {
                         entity.selectClear.style.display = 'none';
                     }
                 });
-
-                this.selectManager.setupClearButton(entity, (): void => {
-                    // Clear button callback without blocking logic
-                    // Callback кнопки очистки без логики блокировки
-                });
             }, 0);
         }
     }
 
     /**
      * Setup file events
-     * Настроить события файлов
-     * @param entity - entity object / объект сущности
+     * @param entity - entity object 
      */
     private setupFileEvents(entity: any): void {
         const fileButton: Element | null = entity.fileZone.querySelector('.card-with-select__item__file-zone__button');
 
-        // File button click
-        // Клик по кнопке файла
         fileButton?.addEventListener('click', (event: Event): void => {
             entity.fileInput.click();
         });
 
-        // File input change
-        // Изменение файлового input
         entity.fileInput.addEventListener('change', async (event: Event): Promise<void> => {
             const fileFromInput: File | undefined = (event.target as HTMLInputElement).files?.[0];
 
@@ -142,8 +119,6 @@ class EntityManager {
             }
         });
 
-        // Drag and drop events
-        // События drag and drop
         entity.fileZone.addEventListener('dragover', (event: DragEvent): void => {
             event.preventDefault();
             event.stopPropagation();
@@ -161,6 +136,7 @@ class EntityManager {
             entity.fileZone.classList.remove('card-with-select__item__file-zone--dragover');
 
             const files: FileList | undefined = event.dataTransfer?.files;
+
             if (files && files.length > 0) {
                 await this.handleFileUpload(files[0], entity);
             }
