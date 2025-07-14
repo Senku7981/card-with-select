@@ -64,7 +64,7 @@ const editor = new EditorJS({
 #### Базовое подключение
 
 ```html
-<script src="https://unpkg.com/card-with-select-tool-v1@3.0.0/dist/card-with-select.umd.js"></script>
+<script src="https://unpkg.com/card-with-select-tool-v1@3.0.1/dist/card-with-select.umd.js"></script>
 <script>
   const editor = new EditorJS({
     holder: 'editorjs',
