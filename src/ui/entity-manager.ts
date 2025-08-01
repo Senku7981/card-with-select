@@ -89,7 +89,8 @@ class EntityManager {
 
         if (this.isConfigurableType(entity.linkType)) {
             setTimeout((): void => {
-                this.selectManager.initializeSelect(entity, null, (value: string): void => {
+                const selectedId = entity.entityId || entity.selectedId || null;
+                this.selectManager.initializeSelect(entity, selectedId, (value: string): void => {
                     if (value && value !== '') {
                         entity.selectClear.style.display = 'inline-block';
                     } else {
@@ -227,6 +228,7 @@ class EntityManager {
             size?: number;
         }
     ): void {
+        entity.entityId = entityId;
         entity.title.dataset.placeholder = this.config.titlePlaceholder;
         entity.title.innerText = title;
         entity.remove.innerHTML = IconTrash;
@@ -264,8 +266,6 @@ class EntityManager {
         newEntity.appendChild(entity.remove);
         newEntity.appendChild(entity.description);
 
-        // Add elements based on link type
-        // Добавляем элементы в зависимости от типа ссылки
         if (this.isConfigurableType(entity.linkType)) {
             newEntity.appendChild(entity.select);
             newEntity.appendChild(entity.selectClear);
@@ -286,8 +286,6 @@ class EntityManager {
      * @param linkType - type to check / тип для проверки
      */
     private isConfigurableType(linkType: string): boolean {
-        // Backward compatibility: treat 'article' as 'blog'
-        // Обратная совместимость: обрабатываем 'article' как 'blog'
         if (linkType === 'article') {
             return true;
         }
@@ -304,8 +302,6 @@ class EntityManager {
      * @param linkType - type key / ключ типа
      */
     private getConfigurableType(linkType: string) {
-        // Backward compatibility: treat 'article' as 'blog'
-        // Обратная совместимость: обрабатываем 'article' как 'blog'
         if (linkType === 'article') {
             linkType = 'blog';
         }

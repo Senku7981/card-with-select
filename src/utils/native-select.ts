@@ -158,7 +158,6 @@ class NativeSelect {
                         this.showError();
                     });
             } else {
-                // Local search
                 const filtered: NativeSelectOption[] = this.options.filter((option: NativeSelectOption): boolean =>
                     option.text.toLowerCase().includes(query.toLowerCase())
                 );
@@ -275,6 +274,7 @@ class NativeSelect {
 
         if (option) {
             this.selectOption(option);
+            this.renderOptions();
         }
     }
 

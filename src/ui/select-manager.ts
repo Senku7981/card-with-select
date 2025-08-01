@@ -122,12 +122,30 @@ class SelectManager {
             const data = await response.json() as EntityResponse;
 
             if (data.success) {
-                entity.choices.setOptions([{
-                    id: data.data.id,
-                    text: data.data.text,
-                    selected: true,
-                }]);
+                let exists = false;
+                if (Array.isArray(entity.choices.options)) {
+                    exists = entity.choices.options.some((opt: any) => opt.id === data.data.id);
+                }
+                if (!exists) {
+                    entity.choices.setOptions([{
+                        id: data.data.id,
+                        text: data.data.text,
+                        selected: true,
+                    }]);
+                }
                 entity.choices.setValue(data.data.id);
+                // Диагностика
+                console.log('[SelectManager] entityId:', entityId);
+                console.log('[SelectManager] options:', entity.choices.options);
+                console.log('[SelectManager] select value:', entity.select.value);
+                if (entity.select) {
+                    // Принудительно выставим value у select
+                    entity.select.value = data.data.id;
+                    // Попробуем вручную вызвать change
+                    const event = new Event('change', { bubbles: true });
+                    entity.select.dispatchEvent(event);
+                    console.log('[SelectManager] select.value после ручной установки:', entity.select.value);
+                }
             }
         }
     }
