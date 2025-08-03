@@ -79,7 +79,7 @@ class Ui {
 
     // Initialize managers
     // Инициализируем менеджеры
-    this.fileHandler = new FileHandler(api);
+    this.fileHandler = new FileHandler(api, config);
     this.selectManager = new SelectManager(config);
     this.domRenderer = new DOMRenderer(this.fileHandler);
     this.entityManager = new EntityManager(

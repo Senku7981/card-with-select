@@ -6,280 +6,309 @@ import type { FileHandler } from './file-handler';
  * Renderer for DOM elements
  */
 class DOMRenderer {
-    private fileHandler: FileHandler;
+  private fileHandler: FileHandler;
 
-    constructor(fileHandler: FileHandler) {
-        this.fileHandler = fileHandler;
-    }
+  constructor(fileHandler: FileHandler) {
+    this.fileHandler = fileHandler;
+  }
 
-    /**
-     * Render file zone
-     */
-    public renderFileZone(): HTMLElement {
-        const fileZone: HTMLElement = make('div', ['card-with-select__item__file-zone'], {});
+  /**
+   * Render file zone
+   */
+  public renderFileZone(): HTMLElement {
+    const fileZone: HTMLElement = make(
+      'div',
+      ['card-with-select__item__file-zone'],
+      {}
+    );
 
-        fileZone.innerHTML = `
-      <div class="card-with-select__item__file-zone__text">Перетащите файл сюда или</div>
-      <button class="card-with-select__item__file-zone__button" type="button">Выберите файл</button>
-    `;
+    fileZone.innerHTML = `
+        <div class="card-with-select__item__file-zone__text">Перетащите файл сюда или</div>
+        <button class="card-with-select__item__file-zone__button" type="button">Выберите файл</button>
+      `;
 
-        return fileZone;
-    }
+    return fileZone;
+  }
 
-    /**
-     * Show file upload progress
-     * @param entity - entity object
-     * @param file - file being uploaded
-     */
-    public showFileUploadProgress(entity: any, file: File): void {
-        const fileIcon: string = this.fileHandler.getFileIcon(file.name);
+  /**
+   * Show file upload progress
+   * @param entity - entity object
+   * @param file - file being uploaded
+   */
+  public showFileUploadProgress(entity: any, file: File): void {
+    const fileIcon: string = this.fileHandler.getFileIcon(file.name);
 
-        entity.fileInfo.innerHTML = `
-      <div style="
-        padding: 12px;
-        background: rgba(103, 136, 243, 0.05);
-        border-radius: 6px;
-        border: 1px solid rgba(103, 136, 243, 0.1);
-        width: 240px;
-        max-width: 240px;
-        box-sizing: border-box;
-        margin-bottom: 12px;
-      ">
+    entity.fileInfo.innerHTML = `
         <div style="
-          display: flex; 
-          align-items: center; 
-          gap: 12px;
+          padding: 12px;
+          background: rgba(103, 136, 243, 0.05);
+          border-radius: 6px;
+          border: 1px solid rgba(103, 136, 243, 0.1);
+          width: 240px;
+          max-width: 240px;
+          box-sizing: border-box;
+          margin-bottom: 12px;
         ">
-          <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
-          <div style="flex: 1; min-width: 0;">
-            <div style="
-              color: #6788F3; 
-              font-weight: 500; 
-              font-size: 13px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            ">${file.name}</div>
-            <div style="color: #6788F3; font-size: 11px;">
-              Загружается... ${this.fileHandler.formatFileSize(file.size)}
+          <div style="
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+          ">
+            <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
+            <div style="flex: 1; min-width: 0;">
+              <div style="
+                color: #6788F3; 
+                font-weight: 500; 
+                font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              ">${file.name}</div>
+              <div style="color: #6788F3; font-size: 11px;">
+                Загружается... ${this.fileHandler.formatFileSize(file.size)}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-        entity.fileZone.style.display = 'none';
-    }
+      `;
+    entity.fileZone.style.display = 'none';
+  }
 
-    /**
-     * Display file information
-     * @param entity - entity object
-     * @param fileData - file data
-     * @param onFileReplace - callback when file is replaced
-     */
-    public displayFileInfo(
-        entity: any,
-        fileData: {
-            url: string;
-            name: string;
-            size?: number;
-            isBlob?: boolean;
-        },
-        onFileReplace: () => void
-    ): void {
-        const sizeText: string = fileData.size ? ` (${this.fileHandler.formatFileSize(fileData.size)})` : '';
+  /**
+   * Display file information
+   * @param entity - entity object
+   * @param fileData - file data
+   * @param onFileReplace - callback when file is replaced
+   */
+  public displayFileInfo(
+    entity: any,
+    fileData: {
+      url: string;
+      name: string;
+      size?: number;
+      isBlob?: boolean;
+    },
+    onFileReplace: () => void
+  ): void {
+    const sizeText: string = fileData.size
+      ? ` (${this.fileHandler.formatFileSize(fileData.size)})`
+      : '';
 
-        const getFileNameWithoutExtension = (fileName: string): string => {
-            const parts: string[] = fileName.split('.');
+    const getFileNameWithoutExtension = (fileName: string): string => {
+      const parts: string[] = fileName.split('.');
 
-            if (parts.length > 1) {
-                return parts.slice(0, -1).join('.');
-            }
+      if (parts.length > 1) {
+        return parts.slice(0, -1).join('.');
+      }
 
-            return fileName;
-        };
+      return fileName;
+    };
 
-        const fileIcon: string = this.fileHandler.getFileIcon(fileData.name);
-        const fileExtension: string = this.fileHandler.getFileExtension(fileData.name);
+    const fileIcon: string = this.fileHandler.getFileIcon(fileData.name);
+    const fileExtension: string = this.fileHandler.getFileExtension(
+      fileData.name
+    );
 
-        entity.fileInfo.innerHTML = `
-      <div style="
-        padding: 12px;
-        background: rgba(103, 136, 243, 0.05);
-        border-radius: 6px;
-        border: 1px solid rgba(103, 136, 243, 0.1);
-        width: 240px;
-        max-width: 240px;
-        box-sizing: border-box;
-        margin-bottom: 12px;
-      ">
+    entity.fileInfo.innerHTML = `
         <div style="
-          display: flex; 
-          align-items: center; 
-          gap: 12px; 
+          padding: 12px;
+          background: rgba(103, 136, 243, 0.05);
+          border-radius: 6px;
+          border: 1px solid rgba(103, 136, 243, 0.1);
+          width: 240px;
+          max-width: 240px;
+          box-sizing: border-box;
           margin-bottom: 12px;
         ">
-          <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
           <div style="
-            flex: 1; 
-            min-width: 0;
-            max-width: calc(100% - 120px);
-            overflow: hidden;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 12px;
           ">
+            <span style="font-size: 18px; flex-shrink: 0;">${fileIcon}</span>
             <div style="
-              color: #6788F3; 
-              font-weight: 500; 
-              font-size: 14px;
-              white-space: nowrap;
+              flex: 1; 
+              min-width: 0;
+              max-width: calc(100% - 120px);
               overflow: hidden;
-              text-overflow: ellipsis;
-              max-width: 100%;
-            " title="${fileData.name}">${fileData.name}</div>
-            <div style="
-              color: #6788F3; 
-              opacity: 0.7; 
-              font-size: 12px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            ">${sizeText}</div>
-          </div>
-          <button class="card-with-select__item__change-file" type="button" style="
-            flex-shrink: 0;
-            background: transparent;
-            border: 1px solid #6788F3;
-            color: #6788F3;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'TT Hoves', sans-serif;
-            white-space: nowrap;
-          ">Заменить</button>
-        </div>
-        
-        <!-- Поле для редактирования названия файла -->
-        <div style="margin-bottom: 12px;">
-          <label style="
-            display: block;
-            color: #6788F3;
-            font-size: 12px;
-            margin-bottom: 6px;
-            font-weight: 500;
-          ">название файла:</label>
-          <input 
-            type="text" 
-            class="card-with-select__item__file-name-input"
-            value="${getFileNameWithoutExtension(fileData.name)}"
-            style="
-              width: 100%;
-              padding: 8px 12px;
-              border: 1px solid rgba(103, 136, 243, 0.3);
-              border-radius: 4px;
-              font-size: 13px;
-              color: #6788F3;
-              background: white;
-              box-sizing: border-box;
-              font-family: 'TT Hoves', sans-serif;
-            "
-            placeholder="Введите название для отображения"
-            data-original-extension="${fileExtension}"
-          />
-        </div>
-        
-        <!-- Ссылка для скачивания -->
-        <div>
-          ${fileData.isBlob
-                ? `
-              <span style="
-                color: #999; 
-                font-size: 12px;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-              ">
-                <span style="flex-shrink: 0;">⚠️</span>
-                <span>Скачивание недоступно (файл не загружен на сервер)</span>
-              </span>
-            `
-                : `
-              <a href="${fileData.url}" download="${fileData.name}" style="
+            ">
+              <div style="
                 color: #6788F3; 
-                font-size: 12px;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                max-width: 100%;
+                font-weight: 500; 
+                font-size: 14px;
+                white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                max-width: 100%;
+              " title="${fileData.name}">${fileData.name}</div>
+              <div style="
+                color: #6788F3; 
+                opacity: 0.7; 
+                font-size: 12px;
                 white-space: nowrap;
-                cursor: pointer;
-              ">
-                <span style="flex-shrink: 0;">📥</span>
-                <span style="overflow: hidden; text-overflow: ellipsis;">Скачать файл</span>
-              </a>
-            `}
+                overflow: hidden;
+                text-overflow: ellipsis;
+              ">${sizeText}</div>
+            </div>
+            <button class="card-with-select__item__change-file" type="button" style="
+              flex-shrink: 0;
+              background: transparent;
+              border: 1px solid #6788F3;
+              color: #6788F3;
+              padding: 6px 12px;
+              border-radius: 4px;
+              font-size: 12px;
+              cursor: pointer;
+              font-family: 'TT Hoves', sans-serif;
+              white-space: nowrap;
+            ">Заменить</button>
+          </div>
+          
+          <!-- Поле для редактирования названия файла -->
+          <div style="margin-bottom: 12px;">
+            <label style="
+              display: block;
+              color: #6788F3;
+              font-size: 12px;
+              margin-bottom: 6px;
+              font-weight: 500;
+            ">название файла:</label>
+            <input 
+              type="text" 
+              class="card-with-select__item__file-name-input"
+              value="${getFileNameWithoutExtension(fileData.name)}"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid rgba(103, 136, 243, 0.3);
+                border-radius: 4px;
+                font-size: 13px;
+                color: #6788F3;
+                background: white;
+                box-sizing: border-box;
+                font-family: 'TT Hoves', sans-serif;
+              "
+              placeholder="Введите название для отображения"
+              data-original-extension="${fileExtension}"
+            />
+          </div>
+          
+          <!-- Ссылка для скачивания -->
+          <div>
+            ${
+              fileData.isBlob
+                ? `
+                <span style="
+                  color: #999; 
+                  font-size: 12px;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                ">
+                  <span style="flex-shrink: 0;">⚠️</span>
+                  <span>Скачивание недоступно (файл не загружен на сервер)</span>
+                </span>
+              `
+                : `
+                <a href="${fileData.url}" download="${fileData.name}" style="
+                  color: #6788F3; 
+                  font-size: 12px;
+                  text-decoration: none;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  cursor: pointer;
+                ">
+                  <span style="flex-shrink: 0;">📥</span>
+                  <span style="overflow: hidden; text-overflow: ellipsis;">Скачать файл</span>
+                </a>
+              `
+            }
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-        this.setupFileInfoEvents(entity, onFileReplace);
-        entity.fileZone.style.display = 'none';
+    this.setupFileInfoEvents(entity, onFileReplace);
+    entity.fileZone.style.display = 'none';
+  }
+
+  /**
+   * Setup events for file info elements
+   * @param entity - entity object
+   * @param onFileReplace - callback when file is replaced
+   */
+  private setupFileInfoEvents(entity: any, onFileReplace: () => void): void {
+     const fileInfoEl = entity.fileInfo as HTMLElement;
+    const changeButton: Element | null = entity.fileInfo.querySelector(
+      '.card-with-select__item__change-file'
+    );
+
+    if (changeButton) {
+      changeButton.addEventListener('click', (): void => {
+        onFileReplace();
+      });
+
+      changeButton.addEventListener('mouseenter', (): void => {
+        (changeButton as HTMLElement).style.background = '#6788F3';
+        (changeButton as HTMLElement).style.color = 'white';
+      });
+
+      changeButton.addEventListener('mouseleave', (): void => {
+        (changeButton as HTMLElement).style.background = 'transparent';
+        (changeButton as HTMLElement).style.color = '#6788F3';
+      });
     }
 
-    /**
-     * Setup events for file info elements
-     * @param entity - entity object
-     * @param onFileReplace - callback when file is replaced
-     */
-    private setupFileInfoEvents(entity: any, onFileReplace: () => void): void {
-        const changeButton: Element | null = entity.fileInfo.querySelector('.card-with-select__item__change-file');
+    const fileNameInput = entity.fileInfo.querySelector<HTMLInputElement>(
+      '.card-with-select__item__file-name-input'
+    );
 
-        if (changeButton) {
-            changeButton.addEventListener('click', (): void => {
-                onFileReplace();
-            });
+    fileNameInput.addEventListener('focus', (): void => {
+      (fileNameInput as HTMLInputElement).style.borderColor = '#6788F3';
+      (fileNameInput as HTMLInputElement).style.boxShadow =
+        '0 0 0 2px rgba(103, 136, 243, 0.1)';
+    });
 
-            changeButton.addEventListener('mouseenter', (): void => {
-                (changeButton as HTMLElement).style.background = '#6788F3';
-                (changeButton as HTMLElement).style.color = 'white';
-            });
-
-            changeButton.addEventListener('mouseleave', (): void => {
-                (changeButton as HTMLElement).style.background = 'transparent';
-                (changeButton as HTMLElement).style.color = '#6788F3';
-            });
+    fileNameInput.addEventListener(
+      'blur',
+      async (event: FocusEvent): Promise<void> => {
+        const input = event.target as HTMLInputElement;
+        const newBaseName = input.value;
+        const currentMeta = JSON.parse(
+          entity.entity.dataset.fileData || '{}'
+        ) as {
+          id: string;
+          name: string;
+          extension: string;
+          url: string;
+          size: number;
+        };
+        try {
+          const updated = await this.fileHandler.handleFileRename(
+            currentMeta,
+            newBaseName
+          );
+          entity.entity.dataset.fileData = JSON.stringify(updated);
+          input.value = updated.name.replace(`.${updated.extension}`, '');
+          const link = entity.fileInfo.querySelector<HTMLAnchorElement>('a');
+          if (link) {
+            link.href = updated.url;
+            link.download = updated.name;
+          }
+        } catch (err) {
+          console.error('Переименование файла не удалось:', err);
+        } finally {
+          input.style.borderColor = 'rgba(103, 136, 243, 0.3)';
+          input.style.boxShadow = 'none';
         }
-
-        const fileNameInput: Element | null = entity.fileInfo.querySelector('.card-with-select__item__file-name-input');
-
-        if (fileNameInput) {
-            fileNameInput.addEventListener('input', (event: Event): void => {
-                const inputElement: HTMLInputElement = event.target as HTMLInputElement;
-                const newNameWithoutExtension: string = inputElement.value;
-                const originalExtension: string = inputElement.dataset.originalExtension || '';
-
-                const fullFileName: string = originalExtension
-                    ? `${newNameWithoutExtension}.${originalExtension}`
-                    : newNameWithoutExtension;
-
-                const currentFileData = JSON.parse(entity.entity.dataset.fileData || '{}');
-
-                currentFileData.displayName = fullFileName;
-                entity.entity.dataset.fileData = JSON.stringify(currentFileData);
-            });
-
-            fileNameInput.addEventListener('focus', (): void => {
-                (fileNameInput as HTMLInputElement).style.borderColor = '#6788F3';
-                (fileNameInput as HTMLInputElement).style.boxShadow = '0 0 0 2px rgba(103, 136, 243, 0.1)';
-            });
-
-            fileNameInput.addEventListener('blur', (): void => {
-                (fileNameInput as HTMLInputElement).style.borderColor = 'rgba(103, 136, 243, 0.3)';
-                (fileNameInput as HTMLInputElement).style.boxShadow = 'none';
-            });
-        }
-    }
+      }
+    );
+  }
 }
 
 export { DOMRenderer };
