@@ -187,7 +187,7 @@ class FileHandler {
   }> {
     const renameUrl = this.renameUrl;
     const payload = {
-      id: fileMeta.id,
+      ...fileMeta,
       name: newName,
     };
     const response = await fetch(renameUrl, {

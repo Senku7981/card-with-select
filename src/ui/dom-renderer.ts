@@ -1,6 +1,6 @@
-import { make } from '../utils/dom';
+import { make } from "../utils/dom";
 
-import type { FileHandler } from './file-handler';
+import type { FileHandler } from "./file-handler";
 
 /**
  * Renderer for DOM elements
@@ -17,9 +17,9 @@ class DOMRenderer {
    */
   public renderFileZone(): HTMLElement {
     const fileZone: HTMLElement = make(
-      'div',
-      ['card-with-select__item__file-zone'],
-      {}
+      "div",
+      ["card-with-select__item__file-zone"],
+      {},
     );
 
     fileZone.innerHTML = `
@@ -71,7 +71,7 @@ class DOMRenderer {
           </div>
         </div>
       `;
-    entity.fileZone.style.display = 'none';
+    entity.fileZone.style.display = "none";
   }
 
   /**
@@ -88,17 +88,17 @@ class DOMRenderer {
       size?: number;
       isBlob?: boolean;
     },
-    onFileReplace: () => void
+    onFileReplace: () => void,
   ): void {
     const sizeText: string = fileData.size
       ? ` (${this.fileHandler.formatFileSize(fileData.size)})`
-      : '';
+      : "";
 
     const getFileNameWithoutExtension = (fileName: string): string => {
-      const parts: string[] = fileName.split('.');
+      const parts: string[] = fileName.split(".");
 
       if (parts.length > 1) {
-        return parts.slice(0, -1).join('.');
+        return parts.slice(0, -1).join(".");
       }
 
       return fileName;
@@ -106,7 +106,7 @@ class DOMRenderer {
 
     const fileIcon: string = this.fileHandler.getFileIcon(fileData.name);
     const fileExtension: string = this.fileHandler.getFileExtension(
-      fileData.name
+      fileData.name,
     );
 
     entity.fileInfo.innerHTML = `
@@ -234,7 +234,7 @@ class DOMRenderer {
       `;
 
     this.setupFileInfoEvents(entity, onFileReplace);
-    entity.fileZone.style.display = 'none';
+    entity.fileZone.style.display = "none";
   }
 
   /**
@@ -243,71 +243,72 @@ class DOMRenderer {
    * @param onFileReplace - callback when file is replaced
    */
   private setupFileInfoEvents(entity: any, onFileReplace: () => void): void {
-     const fileInfoEl = entity.fileInfo as HTMLElement;
-    const changeButton: Element | null = entity.fileInfo.querySelector(
-      '.card-with-select__item__change-file'
-    );
+    const fileInfoEl = entity.fileInfo as HTMLElement;
+
+    const changeButton = fileInfoEl.querySelector(
+      ".card-with-select__item__change-file",
+    ) as HTMLElement | null;
 
     if (changeButton) {
-      changeButton.addEventListener('click', (): void => {
+      changeButton.addEventListener("click", () => {
         onFileReplace();
       });
 
-      changeButton.addEventListener('mouseenter', (): void => {
-        (changeButton as HTMLElement).style.background = '#6788F3';
-        (changeButton as HTMLElement).style.color = 'white';
+      changeButton.addEventListener("mouseenter", () => {
+        changeButton.style.background = "#6788F3";
+        changeButton.style.color = "white";
       });
 
-      changeButton.addEventListener('mouseleave', (): void => {
-        (changeButton as HTMLElement).style.background = 'transparent';
-        (changeButton as HTMLElement).style.color = '#6788F3';
+      changeButton.addEventListener("mouseleave", () => {
+        changeButton.style.background = "transparent";
+        changeButton.style.color = "#6788F3";
       });
     }
 
-    const fileNameInput = entity.fileInfo.querySelector<HTMLInputElement>(
-      '.card-with-select__item__file-name-input'
+    const fileNameInput = fileInfoEl.querySelector<HTMLInputElement>(
+      ".card-with-select__item__file-name-input",
     );
 
-    fileNameInput.addEventListener('focus', (): void => {
-      (fileNameInput as HTMLInputElement).style.borderColor = '#6788F3';
-      (fileNameInput as HTMLInputElement).style.boxShadow =
-        '0 0 0 2px rgba(103, 136, 243, 0.1)';
+    if (!fileNameInput) return;
+
+    fileNameInput.addEventListener("focus", () => {
+      fileNameInput.style.borderColor = "#6788F3";
+      fileNameInput.style.boxShadow = "0 0 0 2px rgba(103, 136, 243, 0.1)";
     });
 
-    fileNameInput.addEventListener(
-      'blur',
-      async (event: FocusEvent): Promise<void> => {
-        const input = event.target as HTMLInputElement;
-        const newBaseName = input.value;
-        const currentMeta = JSON.parse(
-          entity.entity.dataset.fileData || '{}'
-        ) as {
-          id: string;
-          name: string;
-          extension: string;
-          url: string;
-          size: number;
-        };
-        try {
-          const updated = await this.fileHandler.handleFileRename(
-            currentMeta,
-            newBaseName
-          );
-          entity.entity.dataset.fileData = JSON.stringify(updated);
-          input.value = updated.name.replace(`.${updated.extension}`, '');
-          const link = entity.fileInfo.querySelector<HTMLAnchorElement>('a');
-          if (link) {
-            link.href = updated.url;
-            link.download = updated.name;
-          }
-        } catch (err) {
-          console.error('Переименование файла не удалось:', err);
-        } finally {
-          input.style.borderColor = 'rgba(103, 136, 243, 0.3)';
-          input.style.boxShadow = 'none';
+    fileNameInput.addEventListener("blur", async (event: FocusEvent) => {
+      const input = event.target as HTMLInputElement;
+      const newBaseName = input.value;
+      const currentMeta = JSON.parse(
+        entity.entity.dataset.fileData || "{}",
+      ) as {
+        id: string;
+        name: string;
+        extension: string;
+        url: string;
+        size: number;
+      };
+
+      try {
+        const updated = await this.fileHandler.handleFileRename(
+          currentMeta,
+          newBaseName,
+        );
+        entity.entity.dataset.fileData = JSON.stringify(updated);
+        input.value = updated.name.replace(`.${updated.extension}`, "");
+
+        const link = fileInfoEl.querySelector<HTMLAnchorElement>("a");
+        if (link) {
+          link.href = updated.url;
+          link.download = updated.name;
         }
+      } catch (err) {
+        console.error("Переименование файла не удалось:", err);
+      } finally {
+        input.style.borderColor = "rgba(103, 136, 243, 0.3)";
+        input.style.boxShadow = "none";
       }
-    );
+    });
   }
 }
 

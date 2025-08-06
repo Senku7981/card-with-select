@@ -19,7 +19,15 @@ import { Ui } from './ui';
 import './index.css';
 
 import type { MenuConfig } from '@editorjs/editorjs/types/tools';
-import type { API, ToolboxConfig, PasteConfig, BlockToolConstructorOptions, BlockTool, BlockAPI, PasteEvent } from '@editorjs/editorjs';
+import type {
+  API,
+  ToolboxConfig,
+  PasteConfig,
+  BlockToolConstructorOptions,
+  BlockTool,
+  BlockAPI,
+  PasteEvent,
+} from '@editorjs/editorjs';
 import type { NativeSelect } from './utils/native-select';
 import type { CardWithSelectToolData } from './types/card-with-select-tool-data.interface';
 import type { CardWithSelectConfig } from './types/card-with-select-config.interface';
@@ -73,42 +81,48 @@ class CardWithSelectTool implements BlockTool {
    * @param tool.config - user config for Tool
    * @param tool.api - Editor.js API
    * @param tool.block - current Block API
-   * 
+   *
    * @param tool - свойства инструмента полученные из editor.js
    * @param tool.data - ранее сохранённые данные
    * @param tool.config - пользовательская конфигурация для Tool
    * @param tool.api - API Editor.js
    * @param tool.block - API текущего блока
    */
-  
+
   constructor({ data, config, api, block }: TermToolConstructorOptions) {
     this.api = api;
     this.block = block;
-  /**
-   * Tool's initial config
-   * Начальная конфигурация Tool
-   */
-  this.config = {
-    endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
-    endpointOne: config?.endpointOne ?? '/blog/ajax-blog-by-id?id=1',
-    maxEntityQuantity: config?.maxEntityQuantity ?? CardWithSelectTool.DEFAULT_MAX_ENTITY_QUANTITY,
-    additionalRequestData: config?.additionalRequestData,
-    additionalRequestHeaders: config?.additionalRequestHeaders,
-    types: config?.types,
-    titlePlaceholder: this.api.i18n.t(config?.titlePlaceholder ?? 'Title'),
-    descriptionPlaceholder: this.api.i18n.t(config?.descriptionPlaceholder ?? 'Description'),
-    actions: config?.actions,
-    configurableTypes: config?.configurableTypes ?? [
-      {
-        key: 'blog',
-        buttonLabel: 'Статья блога',
-        endpoint: '/blog/ajax-blog-list',
-        endpointOne: '/blog/ajax-blog-by-id',
-        searchPlaceholder: 'Поиск статей...',
-        color: '#007acc',
-        icon: '📄'
-      },
-    ],
+    /**
+     * Tool's initial config
+     * Начальная конфигурация Tool
+     */
+    this.config = {
+      endpoint: config?.endpoint ?? '/blog/ajax-blog-list',
+      endpointOne: config?.endpointOne ?? '/blog/ajax-blog-by-id?id=1',
+      maxEntityQuantity:
+        config?.maxEntityQuantity ??
+        CardWithSelectTool.DEFAULT_MAX_ENTITY_QUANTITY,
+      additionalRequestData: config?.additionalRequestData,
+      additionalRequestHeaders: config?.additionalRequestHeaders,
+      types: config?.types,
+      titlePlaceholder: this.api.i18n.t(config?.titlePlaceholder ?? 'Title'),
+      descriptionPlaceholder: this.api.i18n.t(
+        config?.descriptionPlaceholder ?? 'Description'
+      ),
+      actions: config?.actions,
+      fileUploadEndpoint: config?.fileUploadEndpoint,
+      fileRenameEndpoint: config?.fileRenameEndpoint,
+      configurableTypes: config?.configurableTypes ?? [
+        {
+          key: 'blog',
+          buttonLabel: 'Статья блога',
+          endpoint: '/blog/ajax-blog-list',
+          endpointOne: '/blog/ajax-blog-by-id',
+          searchPlaceholder: 'Поиск статей...',
+          color: '#007acc',
+          icon: '📄',
+        },
+      ],
     };
 
     /**
@@ -170,56 +184,67 @@ class CardWithSelectTool implements BlockTool {
   public save(): CardWithSelectToolData {
     this._data.items = [];
 
-    this.ui.nodes.entities.querySelectorAll('.card-with-select__item').forEach((entity: Element): void => {
-      const titleElement = entity.querySelector('.card-with-select__item__title');
-      const descriptionElement = entity.querySelector('.card-with-select__item__description');
-      const selectElement = entity.querySelector('select');
-      const customLinkInput = entity.querySelector('.card-with-select__item__custom-link') as HTMLInputElement;
-      const fileDataStr = (entity as HTMLElement).dataset.fileData;
-      const linkType = (entity as HTMLElement).dataset.linkType as string;
+    this.ui.nodes.entities
+      .querySelectorAll('.card-with-select__item')
+      .forEach((entity: Element): void => {
+        const titleElement = entity.querySelector(
+          '.card-with-select__item__title'
+        );
+        const descriptionElement = entity.querySelector(
+          '.card-with-select__item__description'
+        );
+        const selectElement = entity.querySelector('select');
+        const customLinkInput = entity.querySelector(
+          '.card-with-select__item__custom-link'
+        ) as HTMLInputElement;
+        const fileDataStr = (entity as HTMLElement).dataset.fileData;
+        const linkType = (entity as HTMLElement).dataset.linkType as string;
 
-      let fileData: {
-        url: string;
-        name: string;
-        size?: number;
-      } | null = null;
+        let fileData: {
+          url: string;
+          name: string;
+          size?: number;
+        } | null = null;
 
-      if (fileDataStr) {
-        try {
-          fileData = JSON.parse(fileDataStr) as {
-            url: string;
-            name: string;
-            size?: number;
-          };
-        } catch (error: unknown) {
-          console.warn('Ошибка парсинга данных файла:', error);
-          console.warn('Error parsing file data:', error);
-        }
-      }
-
-      if (titleElement && descriptionElement) {
-        // Получаем значение из NativeSelect, если он инициализирован
-        // Get value from NativeSelect if it's initialized
-        const entityElement: HTMLElement & { _nativeSelectInstance?: NativeSelect } = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
-        const nativeSelectInstance: NativeSelect | undefined = entityElement._nativeSelectInstance;
-        let entityId: string = '';
-
-        if (nativeSelectInstance) {
-          entityId = nativeSelectInstance.getValue() || '';
-        } else if (selectElement) {
-          entityId = selectElement.value || '';
+        if (fileDataStr) {
+          try {
+            fileData = JSON.parse(fileDataStr) as {
+              url: string;
+              name: string;
+              size?: number;
+            };
+          } catch (error: unknown) {
+            console.warn('Ошибка парсинга данных файла:', error);
+            console.warn('Error parsing file data:', error);
+          }
         }
 
-        this._data.items.push({
-          title: titleElement.innerHTML,
-          description: descriptionElement.innerHTML,
-          entityId: entityId,
-          customLink: customLinkInput?.value || undefined,
-          file: fileData || undefined,
-          linkType: linkType || 'blog',
-        });
-      }
-    });
+        if (titleElement && descriptionElement) {
+          // Получаем значение из NativeSelect, если он инициализирован
+          // Get value from NativeSelect if it's initialized
+          const entityElement: HTMLElement & {
+            _nativeSelectInstance?: NativeSelect;
+          } = entity as HTMLElement & { _nativeSelectInstance?: NativeSelect };
+          const nativeSelectInstance: NativeSelect | undefined =
+            entityElement._nativeSelectInstance;
+          let entityId: string = '';
+
+          if (nativeSelectInstance) {
+            entityId = nativeSelectInstance.getValue() || '';
+          } else if (selectElement) {
+            entityId = selectElement.value || '';
+          }
+
+          this._data.items.push({
+            title: titleElement.innerHTML,
+            description: descriptionElement.innerHTML,
+            entityId: entityId,
+            customLink: customLinkInput?.value || undefined,
+            file: fileData || undefined,
+            linkType: linkType || 'blog',
+          });
+        }
+      });
 
     return this.data;
   }
@@ -277,7 +302,6 @@ class CardWithSelectTool implements BlockTool {
     this.ui.addNewItemWithType('', '', null, type);
   }
 
-
   /**
    * Private methods
    * ̿̿ ̿̿ ̿̿ ̿'̿'\̵͇̿̿\з= ( ▀ ͜͞ʖ▀) =ε/̵͇̿̿/’̿’̿ ̿ ̿̿ ̿̿ ̿̿
@@ -293,12 +317,12 @@ class CardWithSelectTool implements BlockTool {
       this.ui.addNewItemWithType('', '', null, 'blog');
       return;
     }
-    
+
     data.items.forEach((item: EntityType): void => {
       // Backward compatibility: ensure all fields are defined
       // Обратная совместимость: убеждаемся что все поля определены
       let linkType = item.linkType || 'blog';
-      
+
       // Convert old 'article' type to 'blog' for backward compatibility
       // Преобразуем старый тип 'article' в 'blog' для обратной совместимости
       if (linkType === 'article') {
