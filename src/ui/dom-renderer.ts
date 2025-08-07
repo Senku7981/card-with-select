@@ -1,6 +1,6 @@
-import { make } from "../utils/dom";
+import { make } from '../utils/dom';
 
-import type { FileHandler } from "./file-handler";
+import type { FileHandler } from './file-handler';
 
 /**
  * Renderer for DOM elements
@@ -17,9 +17,9 @@ class DOMRenderer {
    */
   public renderFileZone(): HTMLElement {
     const fileZone: HTMLElement = make(
-      "div",
-      ["card-with-select__item__file-zone"],
-      {},
+      'div',
+      ['card-with-select__item__file-zone'],
+      {}
     );
 
     fileZone.innerHTML = `
@@ -71,7 +71,7 @@ class DOMRenderer {
           </div>
         </div>
       `;
-    entity.fileZone.style.display = "none";
+    entity.fileZone.style.display = 'none';
   }
 
   /**
@@ -88,17 +88,21 @@ class DOMRenderer {
       size?: number;
       isBlob?: boolean;
     },
-    onFileReplace: () => void,
+    onFileReplace: () => void
   ): void {
     const sizeText: string = fileData.size
       ? ` (${this.fileHandler.formatFileSize(fileData.size)})`
-      : "";
+      : '';
 
     const getFileNameWithoutExtension = (fileName: string): string => {
-      const parts: string[] = fileName.split(".");
+      if (!fileName) {
+        return '';
+      }
+
+      const parts: string[] = fileName.split('.');
 
       if (parts.length > 1) {
-        return parts.slice(0, -1).join(".");
+        return parts.slice(0, -1).join('.');
       }
 
       return fileName;
@@ -106,7 +110,7 @@ class DOMRenderer {
 
     const fileIcon: string = this.fileHandler.getFileIcon(fileData.name);
     const fileExtension: string = this.fileHandler.getFileExtension(
-      fileData.name,
+      fileData.name
     );
 
     entity.fileInfo.innerHTML = `
@@ -234,7 +238,7 @@ class DOMRenderer {
       `;
 
     this.setupFileInfoEvents(entity, onFileReplace);
-    entity.fileZone.style.display = "none";
+    entity.fileZone.style.display = 'none';
   }
 
   /**
@@ -246,41 +250,42 @@ class DOMRenderer {
     const fileInfoEl = entity.fileInfo as HTMLElement;
 
     const changeButton = fileInfoEl.querySelector(
-      ".card-with-select__item__change-file",
+      '.card-with-select__item__change-file'
     ) as HTMLElement | null;
 
     if (changeButton) {
-      changeButton.addEventListener("click", () => {
+      changeButton.addEventListener('click', () => {
         onFileReplace();
       });
 
-      changeButton.addEventListener("mouseenter", () => {
-        changeButton.style.background = "#6788F3";
-        changeButton.style.color = "white";
+      changeButton.addEventListener('mouseenter', () => {
+        changeButton.style.background = '#6788F3';
+        changeButton.style.color = 'white';
       });
 
-      changeButton.addEventListener("mouseleave", () => {
-        changeButton.style.background = "transparent";
-        changeButton.style.color = "#6788F3";
+      changeButton.addEventListener('mouseleave', () => {
+        changeButton.style.background = 'transparent';
+        changeButton.style.color = '#6788F3';
       });
     }
 
     const fileNameInput = fileInfoEl.querySelector<HTMLInputElement>(
-      ".card-with-select__item__file-name-input",
+      '.card-with-select__item__file-name-input'
     );
 
     if (!fileNameInput) return;
 
-    fileNameInput.addEventListener("focus", () => {
-      fileNameInput.style.borderColor = "#6788F3";
-      fileNameInput.style.boxShadow = "0 0 0 2px rgba(103, 136, 243, 0.1)";
+    fileNameInput.addEventListener('focus', () => {
+      fileNameInput.style.borderColor = '#6788F3';
+      fileNameInput.style.boxShadow = '0 0 0 2px rgba(103, 136, 243, 0.1)';
     });
 
-    fileNameInput.addEventListener("blur", async (event: FocusEvent) => {
+    // Двухсторонняя связь: обновляем заголовок при вводе
+    fileNameInput.addEventListener('input', (event: Event) => {
       const input = event.target as HTMLInputElement;
-      const newBaseName = input.value;
+      const newBaseName = input.value.trim();
       const currentMeta = JSON.parse(
-        entity.entity.dataset.fileData || "{}",
+        entity.entity.dataset.fileData || '{}'
       ) as {
         id: string;
         name: string;
@@ -289,24 +294,101 @@ class DOMRenderer {
         size: number;
       };
 
+      // Если имя пустое, показываем оригинальное имя
+      const newFullFileName = newBaseName
+        ? `${newBaseName}.${currentMeta.extension}`
+        : currentMeta.name;
+
+      // Находим и обновляем заголовок файла
+      const fileTitle = fileInfoEl.querySelector<HTMLDivElement>('[title]');
+      if (fileTitle) {
+        fileTitle.textContent = newFullFileName;
+        fileTitle.title = newFullFileName;
+      }
+
+      // Находим и обновляем ссылку скачивания
+      const link = fileInfoEl.querySelector<HTMLAnchorElement>('a');
+      if (link) {
+        link.download = newFullFileName;
+      }
+
+      // Визуальная индикация для пустого поля
+      if (!newBaseName) {
+        input.style.borderColor = '#ffa502';
+        input.style.boxShadow = '0 0 0 2px rgba(255, 165, 2, 0.1)';
+      } else {
+        input.style.borderColor = '#6788F3';
+        input.style.boxShadow = '0 0 0 2px rgba(103, 136, 243, 0.1)';
+      }
+    });
+
+    fileNameInput.addEventListener('blur', async (event: FocusEvent) => {
+      const input = event.target as HTMLInputElement;
+      const newBaseName = input.value.trim(); // Убираем пробелы
+      const currentMeta = JSON.parse(
+        entity.entity.dataset.fileData || '{}'
+      ) as {
+        id: string;
+        name: string;
+        extension: string;
+        url: string;
+        size: number;
+      };
+
+      // Проверяем что имя файла не пустое
+      if (!newBaseName) {
+        console.error('❌ Имя файла не может быть пустым');
+
+        // Возвращаем оригинальное значение
+        const originalName = currentMeta.name.includes('.')
+          ? currentMeta.name.replace(`.${currentMeta.extension}`, '')
+          : currentMeta.name;
+        input.value = originalName;
+
+        // Показываем визуальную ошибку
+        input.style.borderColor = '#ff4757';
+        input.style.boxShadow = '0 0 0 2px rgba(255, 71, 87, 0.1)';
+
+        // Убираем ошибку через 2 секунды
+        setTimeout(() => {
+          input.style.borderColor = 'rgba(103, 136, 243, 0.3)';
+          input.style.boxShadow = 'none';
+        }, 2000);
+
+        return;
+      }
+
       try {
         const updated = await this.fileHandler.handleFileRename(
           currentMeta,
-          newBaseName,
+          newBaseName
         );
-        entity.entity.dataset.fileData = JSON.stringify(updated);
-        input.value = updated.name.replace(`.${updated.extension}`, "");
 
-        const link = fileInfoEl.querySelector<HTMLAnchorElement>("a");
+        // Извлекаем данные файла из response объекта
+        let fileData: any = updated;
+        if ((updated as any).success && (updated as any).data) {
+          fileData = (updated as any).data;
+        }
+
+        entity.entity.dataset.fileData = JSON.stringify(fileData);
+
+        // Собираем имя файла из имени и расширения, если нужно
+        const fullFileName = fileData.name.includes('.')
+          ? fileData.name
+          : `${fileData.name}.${fileData.extension}`;
+
+        input.value = fullFileName.replace(`.${fileData.extension}`, '');
+
+        const link = fileInfoEl.querySelector<HTMLAnchorElement>('a');
         if (link) {
-          link.href = updated.url;
-          link.download = updated.name;
+          link.href = fileData.url;
+          link.download = fullFileName;
         }
       } catch (err) {
-        console.error("Переименование файла не удалось:", err);
+        console.error('Переименование файла не удалось:', err);
       } finally {
-        input.style.borderColor = "rgba(103, 136, 243, 0.3)";
-        input.style.boxShadow = "none";
+        input.style.borderColor = 'rgba(103, 136, 243, 0.3)';
+        input.style.boxShadow = 'none';
       }
     });
   }

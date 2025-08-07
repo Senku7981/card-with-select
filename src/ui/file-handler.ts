@@ -33,11 +33,11 @@ class FileHandler {
   ): Promise<void> {
     onProgress(entity, file);
 
+
     try {
       const fileData = await this.uploadFileToServer(file);
       onSuccess(entity, fileData);
     } catch (error) {
-      console.warn('File upload to server failed, using local blob:', error);
       const fileData = {
         url: URL.createObjectURL(file),
         name: file.name,
@@ -57,6 +57,7 @@ class FileHandler {
     const formData: FormData = new FormData();
     formData.append('file', file);
 
+
     const response: Response = await fetch(this.uploadUrl, {
       method: 'POST',
       body: formData,
@@ -66,12 +67,16 @@ class FileHandler {
       },
     });
 
+
     if (!response.ok) {
       throw new Error(`Upload failed: ${response.status}`);
     }
 
+    const responseText = await response.text();
+
     const result: { success: boolean; data: FileMetadata; message?: string } =
-      await response.json();
+      JSON.parse(responseText);
+
 
     if (result.success && result.data) {
       return result.data;
@@ -126,6 +131,10 @@ class FileHandler {
    * @param fileName
    */
   public getFileIcon(fileName: string): string {
+    if (!fileName) {
+      return '📎'; // Возвращаем дефолтную иконку если имя файла отсутствует
+    }
+
     const extension: string | undefined = fileName
       .split('.')
       .pop()
@@ -158,6 +167,9 @@ class FileHandler {
    * @param fileName - name of the file
    */
   public getFileExtension(fileName: string): string {
+    if (!fileName) {
+      return '';
+    }
     const parts: string[] = fileName.split('.');
     return parts.length > 1 ? parts[parts.length - 1] : '';
   }
@@ -168,13 +180,7 @@ class FileHandler {
    * @param newName – новое имя без расширения
    */
   public async handleFileRename(
-    fileMeta: {
-      id: string;
-      name: string;
-      extension: string;
-      url: string;
-      size: number;
-    },
+    fileMeta: any, // Может быть response объект или данные файла
     newName: string
   ): Promise<{
     id: string;
@@ -185,13 +191,39 @@ class FileHandler {
     createdAt: string;
     updatedAt: string;
   }> {
+
+    // Извлекаем данные файла из response объекта если нужно
+    let fileData = fileMeta;
+    if (fileMeta.success && fileMeta.data) {
+      fileData = fileMeta.data;
+    }
+
+
+    // Проверяем что у нас есть id
+    if (!fileData.id) {
+      // Возвращаем обновленные данные без серверного запроса
+      return {
+        ...fileData,
+        name: `${newName}.${fileData.extension}`,
+        id: fileData.id || '',
+        extension: fileData.extension || this.getFileExtension(fileData.name),
+        url: fileData.url || '',
+        size: fileData.size || 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
     const renameUrl = this.renameUrl;
     const payload = {
-      ...fileMeta,
-      id: fileMeta.id || null,
-      extension: this.getFileExtension(fileMeta.name),
+      id: fileData.id,
       name: newName,
+      extension: fileData.extension || this.getFileExtension(fileData.name),
+      url: fileData.url,
+      size: fileData.size,
     };
+
+
     const response = await fetch(renameUrl, {
       method: 'PUT',
       headers: {
@@ -200,7 +232,12 @@ class FileHandler {
       },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error(`Rename failed: ${response.status}`);
+
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Rename failed: ${response.status}`);
+    }
     return await response.json();
   }
 }
